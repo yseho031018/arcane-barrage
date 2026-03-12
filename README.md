@@ -1,6 +1,6 @@
 # 🌟 아케인 배라지 (Arcane Barrage)
 
-![Game Status](https://img.shields.io/badge/Status-v1.0.0-blue)
+![Game Status](https://img.shields.io/badge/Status-v1.1.0-blue)
 ![Platform](https://img.shields.io/badge/Platform-Web-success)
 
 ## 🎮 게임 소개
@@ -36,6 +36,10 @@
 ---
 
 ## 📜 업데이트 내역 (Changelog)
+
+### v1.1.0 (사운드 시스템 업데이트)
+*   **Web Audio API 기반 8비트 사운드 추가:** 외부 파일 없이 코드로 저항 및 마법 발사 소리를 합성하는 `audio.js` 플러그인 도입
+*   **인게임 효과음 반영:** 미사일 발사음, 경험치 획득, 타격, 피격, 폭발, 레벨업 등 각 이벤트에 맞춤형 SFX 구현
 
 ### v1.0.0 (최초 배포 버전)
 *   **코어 플레이 루프 완성:** 적 생성, 플레이어 조작, 경험치 시스템 기능 도입

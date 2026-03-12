@@ -114,6 +114,36 @@ document.addEventListener('mousemove', function (e) {
 var joystick = { active: false, sx: 0, sy: 0, cx: 0, cy: 0, dx: 0, dy: 0, touchId: null };
 var CANVAS_W = 1000, CANVAS_H = 600; // 해상도 상수
 
+/**
+ * portrait(세로) 모드에서는 캔버스가 90도 회전되어 있으므로,
+ * 실제 터치 좌표를 캔버스 내부 좌표로 역변환한다.
+ */
+function getTouchCanvasPos(touch, rect) {
+    var isPortrait = window.innerHeight > window.innerWidth;
+    var scaleX, scaleY, cx, cy;
+    if (isPortrait) {
+        // 세로 화면: 캔버스가 90도 회전됨
+        // 캔버스의 렌더 크기는 가로로 채워짐 (화면높이 = 캔버스 표시 너비)
+        var scale = Math.min(window.innerHeight / CANVAS_W, window.innerWidth / CANVAS_H);
+        var dispW = CANVAS_W * scale; // 표시 너비 (실제 기기 화면 기준)
+        var dispH = CANVAS_H * scale;
+        // 회전 중심 기준으로 터치 좌표 변환
+        var tx = touch.clientX - window.innerWidth / 2;
+        var ty = touch.clientY - window.innerHeight / 2;
+        // 역회전 (-90도)
+        var rx = ty + dispW / 2;
+        var ry = -tx + dispH / 2;
+        cx = rx / scale;
+        cy = ry / scale;
+    } else {
+        scaleX = CANVAS_W / rect.width;
+        scaleY = CANVAS_H / rect.height;
+        cx = (touch.clientX - rect.left) * scaleX;
+        cy = (touch.clientY - rect.top) * scaleY;
+    }
+    return { x: cx, y: cy };
+}
+
 document.addEventListener('touchstart', function(e) {
     if (!state || state.paused) return;
     // UI 버튼 터치면 무시
@@ -122,17 +152,14 @@ document.addEventListener('touchstart', function(e) {
     for(var i=0; i<e.changedTouches.length; i++){
         var t = e.changedTouches[i];
         var rect = document.getElementById('gameCanvas').getBoundingClientRect();
-        if (t.clientX >= rect.left && t.clientX <= rect.right &&
-            t.clientY >= rect.top && t.clientY <= rect.bottom) {
-            
-            var scaleX = CANVAS_W / rect.width;
-            var scaleY = CANVAS_H / rect.height;
-
+        var pos = getTouchCanvasPos(t, rect);
+        // portrait 모드에서는 rect 범위 검사 대신 좌표가 캔버스 내부인지 확인
+        if (pos.x >= 0 && pos.x <= CANVAS_W && pos.y >= 0 && pos.y <= CANVAS_H) {
             joystick.active = true;
-            joystick.sx = (t.clientX - rect.left) * scaleX;
-            joystick.sy = (t.clientY - rect.top) * scaleY;
-            joystick.cx = joystick.sx;
-            joystick.cy = joystick.sy;
+            joystick.sx = pos.x;
+            joystick.sy = pos.y;
+            joystick.cx = pos.x;
+            joystick.cy = pos.y;
             joystick.touchId = t.identifier;
             break;
         }
@@ -146,10 +173,9 @@ document.addEventListener('touchmove', function(e) {
         if (t.identifier === joystick.touchId) {
             if (e.cancelable) e.preventDefault(); // 스크롤 등 방지
             var rect = document.getElementById('gameCanvas').getBoundingClientRect();
-            var scaleX = CANVAS_W / rect.width;
-            var scaleY = CANVAS_H / rect.height;
-            var nx = (t.clientX - rect.left) * scaleX;
-            var ny = (t.clientY - rect.top) * scaleY;
+            var pos = getTouchCanvasPos(t, rect);
+            var nx = pos.x;
+            var ny = pos.y;
             
             var dx = nx - joystick.sx;
             var dy = ny - joystick.sy;

@@ -1,6 +1,6 @@
 # 🌟 아케인 배라지 (Arcane Barrage)
 
-![Game Status](https://img.shields.io/badge/Status-v1.3.0-blue)
+![Game Status](https://img.shields.io/badge/Status-v1.4.0-blue)
 ![Platform](https://img.shields.io/badge/Platform-Web-success)
 
 ## 🎮 게임 소개
@@ -36,6 +36,12 @@
 ---
 
 ## 📜 업데이트 내역 (Changelog)
+
+### v1.4.0 (스킬 레벨 및 쿨타임 UI 업데이트)
+*   **보유 스킬 레벨 표시:** 좌측 하단 패널에 현재 보유 중인 모든 스킬의 아이콘과 레벨(`Lv.n`) 출력 기능 추가
+*   **스킬 분류 시스템:** 스킬을 '액티브(Active)'와 '패시브(Passive)'로 분류하여 시각적으로 분리된 패널 제공
+*   **실시간 쿨타임 게이지:** 액티브 스킬 아이콘 하단에 충전 상태에 따라 색상이 변하는 동적 쿨타임 게이지 바 구현
+*   **UI 레이아웃 최적화:** 패널 간 간격 및 위치 조정을 통해 가독성 및 UI 시인성 개선
 
 ### v1.3.0 (모바일 최적화 및 쥬스 편의성 업데이트)
 *   **시각 효과 강화 (Juice):** 적중 시 데미지 텍스트 렌더링, 강력한 체력 타격 및 미사일 폭발 시 화면 흔들림(Screen Shake) 효과 추가.

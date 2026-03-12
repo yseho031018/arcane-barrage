@@ -94,6 +94,11 @@ document.addEventListener('keydown', function (e) {
     if (e.key === 'b' || e.key === 'B') {
         if (typeof toggleBgm === 'function') { toggleBgm(); }
     }
+
+    // SFX 켜기/끄기 단축키 (N키)
+    if (e.key === 'n' || e.key === 'N') {
+        if (typeof toggleSfx === 'function') { toggleSfx(); }
+    }
 });
 document.addEventListener('keyup', function (e) { keys[e.key] = false; });
 

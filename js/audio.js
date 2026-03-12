@@ -4,6 +4,7 @@
 // ──────────────────────────────────────────────
 
 var audioCtx = null;
+var sfxEnabled = true; // SFX 온/오프 플래그
 
 /**
  * 사용자 입력 시 AudioContext를 초기화 (브라우저 정책 우회)
@@ -33,7 +34,7 @@ document.addEventListener('keydown', initAudio, { once: true });
  * @param {string} type 'shoot' | 'hit' | 'xp' | 'levelup' | 'explosion' | 'hurt'
  */
 function playSound(type) {
-    if (!audioCtx) return;
+    if (!audioCtx || !sfxEnabled) return;
 
     var osc     = audioCtx.createOscillator();
     var gainNode = audioCtx.createGain();
@@ -307,4 +308,11 @@ function toggleBgm() {
         startBgm();
         if (btn) btn.textContent = '🎵 BGM ON';
     }
+}
+
+/** SFX 켜기/끄기 토글 — 버튼 텍스트도 함께 변경 */
+function toggleSfx() {
+    sfxEnabled = !sfxEnabled;
+    var btn = document.getElementById('sfxBtn');
+    if (btn) btn.textContent = sfxEnabled ? '🔊 SFX ON' : '🔇 SFX OFF';
 }

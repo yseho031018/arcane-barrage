@@ -89,6 +89,11 @@ document.addEventListener('keydown', function (e) {
 
     // 일시정지(메뉴) 단축키
     if (e.key === 'Escape') { toggleMenu(); }
+
+    // BGM 켜기/끄기 단축키 (B키) — 오버레이 없을 때만
+    if (e.key === 'b' || e.key === 'B') {
+        if (typeof toggleBgm === 'function') { toggleBgm(); }
+    }
 });
 document.addEventListener('keyup', function (e) { keys[e.key] = false; });
 

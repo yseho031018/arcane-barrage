@@ -116,8 +116,9 @@ function playSound(type) {
 // ▸ 트랙  : 멜로디(square) + 베이스(sawtooth) + 드럼 3-트랙
 // ──────────────────────────────────────────────
 
-var bgmPlaying  = false;
+var bgmPlaying   = false;
 var bgmScheduler = null;
+var bgmMasterGain = null; // BGM 전체 볼륨의 마스터 노드
 
 /** 음계 주파수 테이블 (A4 = 440 Hz 기준) */
 var NOTE = {
@@ -189,11 +190,11 @@ var DRUM_PATTERN = [
 
 /** 단일 노트를 지정 시간에 예약 재생 */
 function scheduleNote(freq, startTime, duration, waveType, vol) {
-    if (!audioCtx || freq === 0) return;
+    if (!audioCtx || freq === 0 || !bgmMasterGain) return;
     var osc = audioCtx.createOscillator();
     var g   = audioCtx.createGain();
     osc.connect(g);
-    g.connect(audioCtx.destination);
+    g.connect(bgmMasterGain); // ← destination 대신 masterGain으로
     osc.type = waveType || 'square';
     osc.frequency.setValueAtTime(freq, startTime);
     g.gain.setValueAtTime(vol || 0.05, startTime);
@@ -204,11 +205,11 @@ function scheduleNote(freq, startTime, duration, waveType, vol) {
 
 /** 드럼 1타를 지정 시간에 예약 재생 */
 function scheduleDrum(type, startTime) {
-    if (!audioCtx) return;
+    if (!audioCtx || !bgmMasterGain) return;
     var osc = audioCtx.createOscillator();
     var g   = audioCtx.createGain();
     osc.connect(g);
-    g.connect(audioCtx.destination);
+    g.connect(bgmMasterGain); // ← masterGain으로
 
     if (type === 'K') {
         osc.type = 'sine';
@@ -269,16 +270,30 @@ function scheduleBgmLoop(startTime) {
 /** BGM 재생 시작 */
 function startBgm() {
     if (bgmPlaying || !audioCtx) return;
+
+    // 마스터 게인 노드 생성 (없으면 새로 만듦, 있으면 볼륨 복원)
+    if (!bgmMasterGain) {
+        bgmMasterGain = audioCtx.createGain();
+        bgmMasterGain.connect(audioCtx.destination);
+    }
+    bgmMasterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    bgmMasterGain.gain.setValueAtTime(1, audioCtx.currentTime);
+
     bgmPlaying = true;
     scheduleBgmLoop(audioCtx.currentTime + 0.05);
 }
 
-/** BGM 정지 */
+/** BGM 정지 — 예약된 음표까지 즉시 무음체 */
 function stopBgm() {
     bgmPlaying = false;
     if (bgmScheduler) {
         clearTimeout(bgmScheduler);
         bgmScheduler = null;
+    }
+    // 마스터 게인을 즉시 0으로 → 이미 예약된 음표도 바로 묵음
+    if (bgmMasterGain && audioCtx) {
+        bgmMasterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        bgmMasterGain.gain.setValueAtTime(0, audioCtx.currentTime);
     }
 }
 

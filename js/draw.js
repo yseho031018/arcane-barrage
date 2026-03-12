@@ -21,6 +21,12 @@ function draw() {
     var cx = state.cam.x;
     var cy = state.cam.y;
 
+    // 화면 흔들림 (Screen Shake)
+    if (state.camShake > 0) {
+        cx += (Math.random() - 0.5) * state.camShake;
+        cy += (Math.random() - 0.5) * state.camShake;
+    }
+
     // ── 무한 배경 그리드 ────────────────────
     ctx.strokeStyle = '#1a1a2e';
     ctx.lineWidth = 1;
@@ -226,7 +232,45 @@ function draw() {
     ctx.fillStyle = '#ff4444';
     ctx.fillRect(p.x - 50, p.y + 22, 100 * pHpRatio, 6);
 
+    // ── 데미지 텍스트 ──────────────────────
+    if (state.damageTexts) {
+        ctx.textAlign = 'center';
+        for (var dtIdx = 0; dtIdx < state.damageTexts.length; dtIdx++) {
+            var dt = state.damageTexts[dtIdx];
+            if (dt.isCrit) {
+                ctx.font = 'bold 22px Arial';
+                ctx.shadowColor = '#fff';
+            } else {
+                ctx.font = 'bold 16px Arial';
+                ctx.shadowColor = '#000';
+            }
+            ctx.shadowBlur = 4;
+            ctx.fillStyle = dt.color;
+            ctx.globalAlpha = Math.max(0, dt.t / 40);
+            ctx.fillText(dt.val, dt.x, dt.y);
+            ctx.globalAlpha = 1.0; // 복구
+        }
+    }
+    ctx.shadowBlur = 0;
+
     ctx.restore(); // 카메라 변환 종료
+
+    // ── 가상 조이스틱 (터치 UI) ─────────────
+    if (typeof joystick !== 'undefined' && joystick.active) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        // 조이스틱 밑판
+        ctx.beginPath();
+        ctx.arc(joystick.sx, joystick.sy, 50, 0, Math.PI * 2);
+        ctx.fillStyle = '#888';
+        ctx.fill();
+        // 조이스틱 스틱
+        ctx.beginPath();
+        ctx.arc(joystick.cx, joystick.cy, 25, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.restore();
+    }
 
     // ── UI 텍스트 업데이트 ─────────────────
     var sec = Math.floor(state.time / 60);

@@ -42,6 +42,8 @@ function startGame(isAdminLogin) {
         paused: false,
         time: 0,
         kills: 0,
+        damageTexts: [],
+        camShake: 0,
 
         // 스테이지 정보
         stage: 1,
@@ -128,10 +130,34 @@ function goToMainMenu() {
     // 메인 화면이 뜨면 첫 번째 버튼에 자동 포커스 (엔터/방향키 즉시 동작)
     if (typeof focusFirstMenuBtn === 'function') focusFirstMenuBtn();
 
+    // 메뉴 돌아갈 때 최고 기록 갱신 표시
+    var bestTime = localStorage.getItem('arcane_best_time') || 0;
+    var bestKills = localStorage.getItem('arcane_best_kills') || 0;
+    var msEl = document.getElementById('mainHighScore');
+    if (msEl && bestTime > 0) {
+        var sec = Math.floor(bestTime / 60);
+        var padLocal = function(n) { return n < 10 ? '0'+n : ''+n; };
+        msEl.textContent = '👑 최고 기록: ' + padLocal(Math.floor(sec / 60)) + ':' + padLocal(sec % 60) + ' (' + bestKills + ' Kills)';
+    }
+
     // 메인화면으로 돌아갈 때 BGM 정지
     if (typeof stopBgm === 'function') {
         stopBgm();
         var btn = document.getElementById('bgmBtn');
         if (btn) btn.textContent = '🔇 BGM OFF (B)';
     }
+}
+
+/** 데미지 텍스트를 화면에 추가하는 헬퍼 함수 */
+function addDamageText(x, y, dmg, isCrit, color) {
+    if (!state || !state.damageTexts) return;
+    if (dmg <= 0) return;
+    state.damageTexts.push({
+        x: x + (Math.random() * 20 - 10),
+        y: y + (Math.random() * 10 - 5),
+        val: Math.floor(dmg),
+        isCrit: !!isCrit,
+        t: 40,
+        color: color || '#fff'
+    });
 }

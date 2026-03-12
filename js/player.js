@@ -54,6 +54,12 @@ function updatePlayerMove() {
 
     if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
 
+    // 가상 조이스틱 입력 (모바일 디테일)
+    if (typeof joystick !== 'undefined' && joystick.active) {
+        dx = joystick.dx;
+        dy = joystick.dy;
+    }
+
     p.x += dx * p.spd;
     p.y += dy * p.spd;
 }
@@ -74,6 +80,7 @@ function updateSword() {
         for (var i = 0; i < state.enemies.length; i++) {
             if (dist(p, state.enemies[i]) < p.swordR + state.enemies[i].r) {
                 state.enemies[i].hp -= p.swordDmg;
+                if (typeof addDamageText === 'function') addDamageText(state.enemies[i].x, state.enemies[i].y, p.swordDmg, false, '#cc88ff');
             }
         }
     }
@@ -100,6 +107,7 @@ function updateProjectiles() {
 
             if (!hit && dist(b, en) < b.r + en.r) {
                 en.hp -= b.dmg;
+                if (typeof addDamageText === 'function') addDamageText(en.x, en.y, b.dmg, false, '#66ccff');
                 b.hitEnemies.push(en);
                 playSound('hit');
 
@@ -171,6 +179,7 @@ function updateSubProjectiles() {
             if (b.hitEnemies.includes(en)) continue;
             if (dist(b, en) < b.r + en.r) {
                 en.hp -= b.dmg;
+                if (typeof addDamageText === 'function') addDamageText(en.x, en.y, b.dmg, false, '#ff8833');
                 hit = true;
                 break;
             }
@@ -201,6 +210,9 @@ function updateOrbs() {
             var dx = ox - ex, dy2 = oy - ey;
             if (Math.sqrt(dx * dx + dy2 * dy2) < er + 9) {
                 state.enemies[j].hp -= 0.6;
+                if (Math.random() < 0.1 && typeof addDamageText === 'function') {
+                    addDamageText(ex, ey, 6, false, '#aa44ff'); // 딜레이를 둬서 뭉쳐 보이게 함
+                }
             }
         }
     }
@@ -223,6 +235,7 @@ function updateBolt() {
 
     for (var i = 0; i < Math.min(p.boltLv, sorted.length); i++) {
         sorted[i].hp -= 25 + p.boltLv * 12;
+        if (typeof addDamageText === 'function') addDamageText(sorted[i].x, sorted[i].y, 25 + p.boltLv * 12, true, '#ffff00');
         state.boltFx.push({ x1: p.x, y1: p.y, x2: sorted[i].x, y2: sorted[i].y, t: 10 });
     }
 }
@@ -240,6 +253,9 @@ function updateAura() {
     for (var i = 0; i < state.enemies.length; i++) {
         if (dist(p, state.enemies[i]) < range) {
             state.enemies[i].hp -= p.auraLv * 0.12;
+            if (Math.random() < 0.05 && typeof addDamageText === 'function') {
+                addDamageText(state.enemies[i].x, state.enemies[i].y, p.auraLv * 2.4, false, '#ff8800');
+            }
         }
     }
 }
@@ -352,9 +368,11 @@ function updateMissiles() {
                 var e = state.enemies[k];
                 if (dist(m, e) < m.splash) {
                     e.hp -= m.dmg;
+                    if (typeof addDamageText === 'function') addDamageText(e.x, e.y, m.dmg, true, '#ff3300');
                 }
             }
-            // 이펙트 추가
+            // 이펙트 및 화면 흔들림
+            state.camShake = Math.max(state.camShake || 0, 8 + p.missileLv);
             state.missileFx.push({x: m.x, y: m.y, r: m.splash, t: 20});
         } else {
             newMissiles.push(m);

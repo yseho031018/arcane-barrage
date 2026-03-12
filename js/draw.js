@@ -289,4 +289,88 @@ function draw() {
 
     var xpRatio = Math.max(0, Math.min(1, p.xp / p.xpMax));
     document.getElementById('xpFill').style.width = (xpRatio * 100) + '%';
+
+    // ── 스킬 패널 (보유 스킬 아이콘 + 레벨) ─────────────────
+    drawSkillPanel(p);
+}
+
+/**
+ * 화면 좌측 하단에 현재 보유 스킬 패널을 그린다.
+ * 레벨이 0인 스킬(미보유)은 표시하지 않는다.
+ */
+function drawSkillPanel(p) {
+    var ICON_SIZE  = 34;  // 아이콘 박스 크기
+    var PADDING    = 6;   // 아이콘 간격
+    var PANEL_X    = 10;  // 패널 시작 X
+    var PANEL_BOTTOM = CANVAS_H - 10; // 패널 하단 기준
+    var COLS       = 7;   // 한 줄에 최대 7개
+
+    // 보유한 스킬만 모은다
+    var owned = [];
+    for (var s = 0; s < SKILLS.length; s++) {
+        var sk = SKILLS[s];
+        var lv = sk.getLevel ? sk.getLevel(p) : 0;
+        if (lv > 0) {
+            owned.push({ sk: sk, lv: lv });
+        }
+    }
+    // 이동속도·HP는 '몇 번 선택했는지' 추적 필요: 별도로 체크
+    // (speed 스킬은 getLevel=0 이라 표시 안 됨 — 의도적)
+
+    if (owned.length === 0) return;
+
+    var rows     = Math.ceil(owned.length / COLS);
+    var cellW    = ICON_SIZE + PADDING;
+    var cellH    = ICON_SIZE + PADDING;
+    var totalW   = Math.min(owned.length, COLS) * cellW - PADDING + PADDING * 2;
+    var totalH   = rows * cellH - PADDING + PADDING * 2;
+    var panelY   = PANEL_BOTTOM - totalH;
+
+    // 반투명 배경
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    ctx.fillStyle = '#0d0d1e';
+    ctx.beginPath();
+    ctx.roundRect(PANEL_X - PADDING, panelY - PADDING, totalW, totalH + PADDING * 2, 8);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // 테두리
+    ctx.strokeStyle = '#4422aa';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(PANEL_X - PADDING, panelY - PADDING, totalW, totalH + PADDING * 2, 8);
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (var i = 0; i < owned.length; i++) {
+        var col  = i % COLS;
+        var row  = Math.floor(i / COLS);
+        var bx   = PANEL_X + col * cellW;
+        var by   = panelY  + row * cellH;
+        var sk   = owned[i].sk;
+        var lv   = owned[i].lv;
+
+        // 아이콘 배경
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#1a0a33';
+        ctx.beginPath();
+        ctx.roundRect(bx, by, ICON_SIZE, ICON_SIZE, 6);
+        ctx.fill();
+
+        // 아이콘 (이모지)
+        ctx.globalAlpha = 1;
+        ctx.font = '18px serif';
+        ctx.fillText(sk.icon, bx + ICON_SIZE / 2, by + ICON_SIZE / 2 - 4);
+
+        // 레벨 배지
+        ctx.font = 'bold 10px Arial';
+        ctx.fillStyle = '#ffdd55';
+        ctx.fillText('Lv.' + lv, bx + ICON_SIZE / 2, by + ICON_SIZE - 7);
+    }
+
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
 }

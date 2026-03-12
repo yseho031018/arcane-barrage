@@ -72,6 +72,7 @@
 
     <!--
   JS 로드 순서 (의존성 순서를 지켜야 함)
+  0. audio      - 효과음 (playSound 함수 등)
   1. constants  - 상수 / SKILLS / ENEMY_TIER 등 전역 데이터
   2. state      - 게임 상태 초기화 (startGame)
   3. skills     - 레벨업 UI (showLevelUp, getSkillCards)
@@ -81,6 +82,7 @@
   7. update     - 메인 업데이트 루프 (update)
   8. main       - 진입점 (startGame + loop 호출)
 -->
+    <script src="js/audio.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/state.js"></script>
     <script src="js/skills.js"></script>

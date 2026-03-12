@@ -23,6 +23,8 @@ function fireProjectiles() {
 
     var baseAng = Math.atan2(target.y - p.y, target.x - p.x);
     var spread = p.projCount > 1 ? 0.25 : 0;
+    
+    playSound('shoot');
 
     for (var j = 0; j < p.projCount; j++) {
         var ang = baseAng + (j - (p.projCount - 1) / 2) * spread;
@@ -99,6 +101,7 @@ function updateProjectiles() {
             if (!hit && dist(b, en) < b.r + en.r) {
                 en.hp -= b.dmg;
                 b.hitEnemies.push(en);
+                playSound('hit');
 
                 if (b.pierce > 0) {
                     b.pierce--; // 관통 가능하면 횟수 감소시키고 소멸 안함
@@ -271,6 +274,7 @@ function updateMissiles() {
         if (p.missileCd <= 0) {
             // 레벨이 오를수록 쿨타임 감소 (최소 60프레임 = 1초)
             p.missileCd = Math.max(60, 200 - p.missileLv * 20);
+            playSound('shoot');
             
             // 발사 개수 증가
             var count = 1 + Math.floor((p.missileLv - 1) / 2);
@@ -343,6 +347,7 @@ function updateMissiles() {
 
         // 맞았으면 폭발 데미지
         if (hit) {
+            playSound('explosion');
             for (var k = 0; k < state.enemies.length; k++) {
                 var e = state.enemies[k];
                 if (dist(m, e) < m.splash) {

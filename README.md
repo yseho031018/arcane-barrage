@@ -1,6 +1,6 @@
 # 🌟 아케인 배라지 (Arcane Barrage)
 
-![Game Status](https://img.shields.io/badge/Status-v1.1.0-blue)
+![Game Status](https://img.shields.io/badge/Status-v1.3.0-blue)
 ![Platform](https://img.shields.io/badge/Platform-Web-success)
 
 ## 🎮 게임 소개

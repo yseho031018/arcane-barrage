@@ -281,3 +281,15 @@ function stopBgm() {
         bgmScheduler = null;
     }
 }
+
+/** BGM 켜기/끄기 토글 — 버튼 텍스트도 함께 변경 */
+function toggleBgm() {
+    var btn = document.getElementById('bgmBtn');
+    if (bgmPlaying) {
+        stopBgm();
+        if (btn) btn.textContent = '🔇 BGM OFF';
+    } else {
+        startBgm();
+        if (btn) btn.textContent = '🎵 BGM ON';
+    }
+}

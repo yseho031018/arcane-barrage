@@ -31,7 +31,11 @@ function startGame(isAdminLogin) {
     if (typeof stopBgm === 'function') stopBgm();
     if (typeof startBgm === 'function') {
         // initAudio 완료 후 시작
-        setTimeout(startBgm, 100);
+        setTimeout(function() {
+            startBgm();
+            var btn = document.getElementById('bgmBtn');
+            if (btn) btn.textContent = '🎵 BGM ON';
+        }, 100);
     }
 
     state = {
@@ -125,5 +129,9 @@ function goToMainMenu() {
     if (typeof focusFirstMenuBtn === 'function') focusFirstMenuBtn();
 
     // 메인화면으로 돌아갈 때 BGM 정지
-    if (typeof stopBgm === 'function') stopBgm();
+    if (typeof stopBgm === 'function') {
+        stopBgm();
+        var btn = document.getElementById('bgmBtn');
+        if (btn) btn.textContent = '🔇 BGM OFF';
+    }
 }

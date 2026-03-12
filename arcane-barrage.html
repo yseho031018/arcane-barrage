@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>뱀파이어 서바이벌</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0a0a0f; display:flex; justify-content:center; align-items:center; height:100vh; font-family:Arial,sans-serif; overflow:hidden; }
+  #gameCanvas { border:2px solid #4a0080; box-shadow:0 0 30px #6a00cc; }
+  #ui { position:absolute; top:0; left:50%; transform:translateX(-50%); width:800px; pointer-events:none; }
+  #topBar { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:rgba(0,0,0,0.7); color:#fff; font-size:14px; }
+  #xpBar { width:100%; height:6px; background:#222; }
+  #xpFill { height:100%; background:linear-gradient(90deg,#00aaff,#00ffcc); transition:width 0.2s; }
+  #levelUp { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); flex-direction:column; align-items:center; justify-content:center; pointer-events:all; z-index:10; }
+  #levelUp h2 { color:#ffe066; font-size:28px; margin-bottom:20px; text-shadow:0 0 10px #ffaa00; }
+  .card { background:#1a0030; border:2px solid #6a00cc; border-radius:12px; padding:18px 24px; margin:8px; cursor:pointer; color:#fff; width:200px; text-align:center; transition:all 0.2s; }
+  .card:hover { background:#2a0060; border-color:#aa44ff; transform:scale(1.05); box-shadow:0 0 20px #6a00cc; }
+  .card .icon { font-size:36px; margin-bottom:8px; }
+  .card .name { font-size:16px; font-weight:bold; color:#cc88ff; }
+  .card .desc { font-size:12px; color:#aaa; margin-top:4px; }
+  #cards { display:flex; flex-wrap:wrap; justify-content:center; }
+  #gameOver { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); flex-direction:column; align-items:center; justify-content:center; pointer-events:all; z-index:10; }
+  #gameOver h2 { color:#ff4444; font-size:36px; margin-bottom:16px; }
+  #gameOver p { color:#ccc; font-size:18px; margin:4px; }
+  #restartBtn { margin-top:24px; padding:12px 32px; background:#6a00cc; color:#fff; border:none; border-radius:8px; font-size:18px; cursor:pointer; pointer-events:all; }
+  #restartBtn:hover { background:#aa44ff; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="550"></canvas>
+<div id="ui">
+  <div id="topBar">
+    <span id="timeDisplay">00:00</span>
+    <span id="levelDisplay">Lv.1</span>
+    <span id="killDisplay">0</span>
+  </div>
+  <div id="xpBar"><div id="xpFill" style="width:0%"></div></div>
+  <div id="levelUp"><h2>LEVEL UP!</h2><div id="cards"></div></div>
+  <div id="gameOver">
+    <h2>GAME OVER</h2>
+    <p id="goTime"></p>
+    <p id="goKills"></p>
+    <button id="restartBtn" onclick="startGame()">다시 시작</button>
+  </div>
+</div>
+<script>
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+var W = canvas.width, H = canvas.height;
+var keys = {};
+var state = null;
+
+var SKILLS = [
+  { id:'orb',    name:'마법 구슬',   icon:'🔮', desc:'회전하는 마법 구슬 추가',
+    apply: function(p){ p.orbCount = p.orbCount + 1; } },
+  { id:'proj',   name:'투사체 강화', icon:'🔵', desc:'투사체 수+1, 속도 증가',
+    apply: function(p){ p.projCount = p.projCount + 1; p.projSpd = p.projSpd + 1; } },
+
+  { id:'speed',  name:'이동속도',    icon:'👟', desc:'이동속도 20% 증가',
+    apply: function(p){ p.spd = p.spd * 1.2; } },
+  { id:'hp',     name:'최대 HP',     icon:'❤️', desc:'최대 HP +40',
+    apply: function(p){ p.maxHp = p.maxHp + 40; p.hp = Math.min(p.hp + 40, p.maxHp); } },
+  { id:'bolt',   name:'번개 볼트',   icon:'⚡', desc:'가장 가까운 적에게 번개',
+    apply: function(p){ p.boltLv = p.boltLv + 1; } },
+  { id:'regen',  name:'자연 회복',   icon:'💚', desc:'3초마다 HP 회복',
+    apply: function(p){ p.regen = p.regen + 3; } },
+  { id:'shield', name:'방어막',      icon:'🛡️', desc:'피격 쿨타임 방어',
+    apply: function(p){ p.shield = p.shield + 1; } },
+  { id:'aura',   name:'화염 오라',   icon:'🔥', desc:'주변 지속 데미지',
+    apply: function(p){ p.auraLv = p.auraLv + 1; } },
+];
+
+function startGame() {
+  document.getElementById('gameOver').style.display = 'none';
+  document.getElementById('levelUp').style.display = 'none';
+  state = {
+    paused: false, time: 0, kills: 0,
+    player: {
+      x: W/2, y: H/2, hp: 120, maxHp: 120, spd: 2.5,
+      xp: 0, xpMax: 15, level: 1,
+      invincible: 0,
+      swordAngle: 0, swordR: 0, swordDmg: 10, swordCd: 0, hasSword: false,
+      projCount: 1, projSpd: 6, projCd: 0, projCdMax: 50,
+      orbCount: 0, orbAngle: 0,
+      boltLv: 0, boltCd: 0,
+      regen: 0, regenCd: 0,
+      shield: 0, shieldCd: 0,
+      auraLv: 0,
+    },
+    enemies: [], projectiles: [], boltFx: [], xpGems: [],
+    spawnTimer: 0,
+  };
+}
+
+function getSkillCards(n) {
+  var pool = SKILLS.slice();
+  var chosen = [];
+  for (var i = 0; i < n && pool.length > 0; i++) {
+    var idx = Math.floor(Math.random() * pool.length);
+    chosen.push(pool.splice(idx, 1)[0]);
+  }
+  return chosen;
+}
+
+function showLevelUp() {
+  state.paused = true;
+  var cards = getSkillCards(3);
+  var div = document.getElementById('cards');
+  div.innerHTML = '';
+  for (var i = 0; i < cards.length; i++) {
+    (function(sk) {
+      var c = document.createElement('div');
+      c.className = 'card';
+      c.innerHTML = '<div class="icon">' + sk.icon + '</div><div class="name">' + sk.name + '</div><div class="desc">' + sk.desc + '</div>';
+      c.onclick = function() {
+        sk.apply(state.player);
+        // 레벨업 시 최대 HP +10, 데미지 +2, 체력 풀 회복
+        var p = state.player;
+        p.maxHp += 10;
+        p.swordDmg += 2;
+        p.hp = p.maxHp;
+        document.getElementById('levelUp').style.display = 'none';
+        state.paused = false;
+      };
+      div.appendChild(c);
+    })(cards[i]);
+  }
+  document.getElementById('levelUp').style.display = 'flex';
+}
+
+function spawnEnemy() {
+  var side = Math.floor(Math.random() * 4);
+  var x, y;
+  if (side === 0)      { x = Math.random() * W; y = -20; }
+  else if (side === 1) { x = W + 20; y = Math.random() * H; }
+  else if (side === 2) { x = Math.random() * W; y = H + 20; }
+  else                 { x = -20; y = Math.random() * H; }
+
+  var t = state.time;
+  var tier = t > 3600 ? 3 : t > 1800 ? 2 : 1;
+  var hpBase  = [0, 25, 55, 110][tier] + Math.floor(t / 600) * 6;
+  var spd     = [0, 0.65, 0.88, 1.1][tier] + Math.random() * 0.2;
+  var xpVal   = [0, 3, 6, 12][tier];
+  var colors  = ['', '#cc4444', '#4444cc', '#cc44cc'];
+  var sizes   = [0, 13, 17, 21];
+  state.enemies.push({ x:x, y:y, hp:hpBase, maxHp:hpBase, spd:spd, xp:xpVal, color:colors[tier], r:sizes[tier], tier:tier });
+}
+
+function dist(a, b) { return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+
+function fireProjectiles() {
+  var p = state.player;
+  var target = null, minD = Infinity;
+  for (var i = 0; i < state.enemies.length; i++) {
+    var d = dist(p, state.enemies[i]);
+    if (d < minD) { minD = d; target = state.enemies[i]; }
+  }
+  if (!target) return;
+  var baseAng = Math.atan2(target.y - p.y, target.x - p.x);
+  var spread = p.projCount > 1 ? 0.25 : 0;
+  for (var j = 0; j < p.projCount; j++) {
+    var ang = baseAng + (j - (p.projCount - 1) / 2) * spread;
+    state.projectiles.push({ x:p.x, y:p.y, vx:Math.cos(ang)*p.projSpd, vy:Math.sin(ang)*p.projSpd, dmg:14, r:6, life:120 });
+  }
+}
+
+function update() {
+  if (state.paused) return;
+  var p = state.player;
+  state.time++;
+
+  // spawn
+  state.spawnTimer++;
+  var rate = Math.max(45, 120 - Math.floor(state.time / 600) * 4);
+  if (state.spawnTimer >= rate) {
+    state.spawnTimer = 0;
+    var cnt = 1 + Math.floor(state.time / 1200);
+    for (var s = 0; s < cnt; s++) spawnEnemy();
+  }
+
+  // player move
+  var dx = 0, dy = 0;
+  if (keys['ArrowLeft']  || keys['a'] || keys['A']) dx -= 1;
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) dx += 1;
+  if (keys['ArrowUp']    || keys['w'] || keys['W']) dy -= 1;
+  if (keys['ArrowDown']  || keys['s'] || keys['S']) dy += 1;
+  if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
+  p.x = Math.max(16, Math.min(W - 16, p.x + dx * p.spd));
+  p.y = Math.max(16, Math.min(H - 16, p.y + dy * p.spd));
+
+  // sword
+  if (p.hasSword) {
+    p.swordAngle += 0.06;
+    p.swordCd--;
+    if (p.swordCd <= 0) {
+      p.swordCd = 18;
+      for (var i = 0; i < state.enemies.length; i++) {
+        if (dist(p, state.enemies[i]) < p.swordR + state.enemies[i].r) state.enemies[i].hp -= p.swordDmg;
+      }
+    }
+  }
+
+  // projectile fire
+  p.projCd--;
+  if (p.projCd <= 0) { p.projCd = p.projCdMax; fireProjectiles(); }
+
+  // projectile move & hit
+  var newProj = [];
+  for (var i = 0; i < state.projectiles.length; i++) {
+    var b = state.projectiles[i];
+    b.x += b.vx; b.y += b.vy; b.life--;
+    if (b.life <= 0 || b.x < -20 || b.x > W + 20 || b.y < -20 || b.y > H + 20) continue;
+    var hit = false;
+    for (var j = 0; j < state.enemies.length; j++) {
+      if (!hit && dist(b, state.enemies[j]) < b.r + state.enemies[j].r) {
+        state.enemies[j].hp -= b.dmg; hit = true;
+      }
+    }
+    if (!hit) newProj.push(b);
+  }
+  state.projectiles = newProj;
+
+  // orbs
+  if (p.orbCount > 0) {
+    p.orbAngle += 0.05;
+    for (var i = 0; i < p.orbCount; i++) {
+      var a = p.orbAngle + (Math.PI * 2 / p.orbCount) * i;
+      var ox = p.x + Math.cos(a) * 60, oy = p.y + Math.sin(a) * 60;
+      for (var j = 0; j < state.enemies.length; j++) {
+        if (Math.sqrt((ox - state.enemies[j].x) * (ox - state.enemies[j].x) + (oy - state.enemies[j].y) * (oy - state.enemies[j].y)) < state.enemies[j].r + 9)
+          state.enemies[j].hp -= 0.6;
+      }
+    }
+  }
+
+  // bolt
+  if (p.boltLv > 0) {
+    p.boltCd--;
+    if (p.boltCd <= 0) {
+      p.boltCd = Math.max(35, 100 - p.boltLv * 15);
+      var sorted = state.enemies.slice().sort(function(a, b) { return dist(p, a) - dist(p, b); });
+      for (var i = 0; i < Math.min(p.boltLv, sorted.length); i++) {
+        sorted[i].hp -= 25 + p.boltLv * 12;
+        state.boltFx.push({ x1:p.x, y1:p.y, x2:sorted[i].x, y2:sorted[i].y, t:10 });
+      }
+    }
+  }
+
+  // aura
+  if (p.auraLv > 0) {
+    for (var i = 0; i < state.enemies.length; i++) {
+      if (dist(p, state.enemies[i]) < 50 + p.auraLv * 15) state.enemies[i].hp -= p.auraLv * 0.12;
+    }
+  }
+
+  // regen
+  if (p.regen > 0) { p.regenCd--; if (p.regenCd <= 0) { p.regenCd = 180; p.hp = Math.min(p.maxHp, p.hp + p.regen); } }
+
+  // bolt fx
+  var newFx = [];
+  for (var i = 0; i < state.boltFx.length; i++) { state.boltFx[i].t--; if (state.boltFx[i].t > 0) newFx.push(state.boltFx[i]); }
+  state.boltFx = newFx;
+
+  // enemy move & collide player
+  if (p.invincible > 0) p.invincible--;
+  if (p.shieldCd > 0) p.shieldCd--;
+  for (var i = 0; i < state.enemies.length; i++) {
+    var e = state.enemies[i];
+    var ang = Math.atan2(p.y - e.y, p.x - e.x);
+    e.x += Math.cos(ang) * e.spd; e.y += Math.sin(ang) * e.spd;
+    if (dist(p, e) < 16 + e.r && p.invincible <= 0) {
+      if (p.shield > 0 && p.shieldCd <= 0) { p.shieldCd = 120; }
+      else { p.hp -= [0, 4, 8, 15][e.tier]; p.invincible = 50; }
+    }
+  }
+
+  // remove dead enemies
+  var newEnemies = [];
+  for (var i = 0; i < state.enemies.length; i++) {
+    if (state.enemies[i].hp <= 0) {
+      state.kills++;
+      state.xpGems.push({ x:state.enemies[i].x, y:state.enemies[i].y, val:state.enemies[i].xp });
+    } else {
+      newEnemies.push(state.enemies[i]);
+    }
+  }
+  state.enemies = newEnemies;
+
+  // collect xp
+  var newGems = [];
+  for (var i = 0; i < state.xpGems.length; i++) {
+    var g = state.xpGems[i];
+    if (dist(p, g) < 40) {
+      p.xp += g.val;
+      if (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.level++; p.xpMax = Math.floor(p.xpMax * 1.35); showLevelUp(); }
+    } else {
+      newGems.push(g);
+    }
+  }
+  state.xpGems = newGems;
+
+  // game over
+  if (p.hp <= 0) {
+    var sec = Math.floor(state.time / 60);
+    document.getElementById('goTime').textContent = '생존: ' + pad(Math.floor(sec/60)) + ':' + pad(sec%60);
+    document.getElementById('goKills').textContent = '처치: ' + state.kills;
+    document.getElementById('gameOver').style.display = 'flex';
+    state.paused = true;
+  }
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function draw() {
+  ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1;
+  for (var x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (var y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  if (!state) return;
+  var p = state.player;
+
+  // xp gems
+  for (var i = 0; i < state.xpGems.length; i++) {
+    var g = state.xpGems[i];
+    ctx.fillStyle = '#00ffcc'; ctx.shadowColor = '#00ffcc'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(g.x, g.y, 5, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // bolt fx
+  for (var i = 0; i < state.boltFx.length; i++) {
+    var f = state.boltFx[i];
+    ctx.strokeStyle = 'rgba(255,255,80,' + (f.t/10) + ')';
+    ctx.lineWidth = 3; ctx.shadowColor = '#ffff00'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.moveTo(f.x1,f.y1); ctx.lineTo(f.x2,f.y2); ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+
+  // projectiles
+  for (var i = 0; i < state.projectiles.length; i++) {
+    var b = state.projectiles[i];
+    ctx.fillStyle = '#66ccff'; ctx.shadowColor = '#44aaff'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // aura
+  if (p.auraLv > 0) {
+    var gr = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 50 + p.auraLv*15);
+    gr.addColorStop(0, 'rgba(255,80,0,0.25)'); gr.addColorStop(1, 'rgba(255,80,0,0)');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(p.x, p.y, 50 + p.auraLv*15, 0, Math.PI*2); ctx.fill();
+  }
+
+  // orbs
+  if (p.orbCount > 0) {
+    for (var i = 0; i < p.orbCount; i++) {
+      var a = p.orbAngle + (Math.PI*2 / p.orbCount) * i;
+      var ox = p.x + Math.cos(a) * 60, oy = p.y + Math.sin(a) * 60;
+      ctx.fillStyle = '#cc88ff'; ctx.shadowColor = '#aa44ff'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(ox, oy, 9, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  // sword arc
+  if (p.hasSword) {
+    ctx.strokeStyle = 'rgba(180,100,255,0.5)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.swordR, p.swordAngle, p.swordAngle + Math.PI*0.9); ctx.stroke();
+    var sx = p.x + Math.cos(p.swordAngle)*p.swordR, sy = p.y + Math.sin(p.swordAngle)*p.swordR;
+    ctx.fillStyle = '#cc88ff'; ctx.shadowColor = '#aa44ff'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(sx, sy, 6, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+  }
+
+  // enemies
+  for (var i = 0; i < state.enemies.length; i++) {
+    var e = state.enemies[i];
+    ctx.fillStyle = e.color; ctx.shadowColor = e.color; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#333'; ctx.fillRect(e.x - e.r, e.y - e.r - 7, e.r*2, 3);
+    ctx.fillStyle = '#ff4444'; ctx.fillRect(e.x - e.r, e.y - e.r - 7, e.r*2*(e.hp/e.maxHp), 3);
+  }
+
+  // player
+  var flash = p.invincible > 0 && Math.floor(p.invincible/5) % 2 === 0;
+  if (!flash) {
+    ctx.fillStyle = '#fff'; ctx.shadowColor = '#aa44ff'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 16, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#aa44ff';
+    ctx.fillRect(p.x-5, p.y-3, 4, 6); ctx.fillRect(p.x+1, p.y-3, 4, 6);
+  }
+
+  // shield ring
+  if (p.shield > 0) {
+    ctx.strokeStyle = p.shieldCd > 0 ? 'rgba(100,100,255,0.3)' : 'rgba(100,200,255,0.85)';
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // player hp bar
+  ctx.fillStyle = '#330000'; ctx.fillRect(p.x-50, p.y+22, 100, 6);
+  ctx.fillStyle = '#ff4444'; ctx.fillRect(p.x-50, p.y+22, 100*(p.hp/p.maxHp), 6);
+
+  // UI text
+  var sec = Math.floor(state.time / 60);
+  document.getElementById('timeDisplay').textContent = '⏱ ' + pad(Math.floor(sec/60)) + ':' + pad(sec%60);
+  document.getElementById('levelDisplay').textContent = 'Lv.' + p.level;
+  document.getElementById('killDisplay').textContent = '💀 ' + state.kills;
+  document.getElementById('xpFill').style.width = (p.xp / p.xpMax * 100) + '%';
+}
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+document.addEventListener('keydown', function(e) { keys[e.key] = true; e.preventDefault(); });
+document.addEventListener('keyup',   function(e) { keys[e.key] = false; });
+startGame();
+loop();
+</script>
+</body>
+</html>

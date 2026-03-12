@@ -1,6 +1,6 @@
 # 🌟 아케인 배라지 (Arcane Barrage)
 
-![Game Status](https://img.shields.io/badge/Status-v1.4.0-blue)
+![Game Status](https://img.shields.io/badge/Status-v1.5.0-blue)
 [![Live Demo](https://img.shields.io/badge/Demo-Play%20Now-brightgreen)](https://yseho031018.github.io/arcane-barrage/)
 ![Platform](https://img.shields.io/badge/Platform-Web-success)
 
@@ -37,6 +37,12 @@
 ---
 
 ## 📜 업데이트 내역 (Changelog)
+
+### v1.5.0 (실시간 분석 및 방문자 통계 업데이트)
+*   **실시간 접속자 카운트:** Firebase Realtime Database 연동을 통해 현재 게임을 플레이 중인 인원수를 실시간으로 메인 화면에 표시
+*   **누적 방문자 시스템:** 중복되지 않는 세션 방문자 수를 집계하여 총 누적 방문자 지표 제공
+*   **Google Analytics 4 통합:** 상세 접속 로그 및 유저 행동 분석을 위해 GA4(G-MNYM1N6G7B) 분석 코드 삽입
+*   **인게임 패치 노트 섹션:** 메인 화면 하단에 최근 업데이트 내역을 바로 확인할 수 있는 UI 영역 추가
 
 ### v1.4.0 (스킬 레벨 및 쿨타임 UI 업데이트)
 *   **보유 스킬 레벨 표시:** 좌측 하단 패널에 현재 보유 중인 모든 스킬의 아이콘과 레벨(`Lv.n`) 출력 기능 추가

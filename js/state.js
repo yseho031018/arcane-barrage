@@ -27,6 +27,13 @@ function startGame(isAdminLogin) {
     // 치트 패널 토글
     document.getElementById('devTools').style.display = typeof window !== 'undefined' && window.isAdmin ? 'flex' : 'none';
 
+    // BGM 사운드 시작 (이전 BGM 중지 후 다시 시작)
+    if (typeof stopBgm === 'function') stopBgm();
+    if (typeof startBgm === 'function') {
+        // initAudio 완료 후 시작
+        setTimeout(startBgm, 100);
+    }
+
     state = {
         paused: false,
         time: 0,
@@ -116,4 +123,7 @@ function goToMainMenu() {
     document.getElementById('mainMenu').style.display = 'flex';
     // 메인 화면이 뜨면 첫 번째 버튼에 자동 포커스 (엔터/방향키 즉시 동작)
     if (typeof focusFirstMenuBtn === 'function') focusFirstMenuBtn();
+
+    // 메인화면으로 돌아갈 때 BGM 정지
+    if (typeof stopBgm === 'function') stopBgm();
 }

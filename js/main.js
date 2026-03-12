@@ -102,46 +102,22 @@ document.addEventListener('keydown', function (e) {
 });
 document.addEventListener('keyup', function (e) { keys[e.key] = false; });
 
-// 마우스 움직임 추적
+// 마우스 움직임 추적 (풀스크린 = canvas가 (0,0)에 위치하므로 clientX/Y 직접 사용)
 document.addEventListener('mousemove', function (e) {
     if (!state) return;
-    var rect = document.getElementById('gameCanvas').getBoundingClientRect();
-    state.mouse.x = e.clientX - rect.left;
-    state.mouse.y = e.clientY - rect.top;
+    state.mouse.x = e.clientX;
+    state.mouse.y = e.clientY;
 });
 
 // ── 모바일 터치 조이스틱 ────────────────────
 var joystick = { active: false, sx: 0, sy: 0, cx: 0, cy: 0, dx: 0, dy: 0, touchId: null };
-var CANVAS_W = 1000, CANVAS_H = 600; // 해상도 상수
+// CANVAS_W / CANVAS_H는 constants.js에서 동적으로 관리됨
 
 /**
- * portrait(세로) 모드에서는 캔버스가 90도 회전되어 있으므로,
- * 실제 터치 좌표를 캔버스 내부 좌표로 역변환한다.
+ * 터치 좌표를 캔버스 내부 좌표로 변환 (풀스크린이므로 1:1 대응)
  */
-function getTouchCanvasPos(touch, rect) {
-    var isPortrait = window.innerHeight > window.innerWidth;
-    var scaleX, scaleY, cx, cy;
-    if (isPortrait) {
-        // 세로 화면: 캔버스가 90도 회전됨
-        // 캔버스의 렌더 크기는 가로로 채워짐 (화면높이 = 캔버스 표시 너비)
-        var scale = Math.min(window.innerHeight / CANVAS_W, window.innerWidth / CANVAS_H);
-        var dispW = CANVAS_W * scale; // 표시 너비 (실제 기기 화면 기준)
-        var dispH = CANVAS_H * scale;
-        // 회전 중심 기준으로 터치 좌표 변환
-        var tx = touch.clientX - window.innerWidth / 2;
-        var ty = touch.clientY - window.innerHeight / 2;
-        // 역회전 (-90도)
-        var rx = ty + dispW / 2;
-        var ry = -tx + dispH / 2;
-        cx = rx / scale;
-        cy = ry / scale;
-    } else {
-        scaleX = CANVAS_W / rect.width;
-        scaleY = CANVAS_H / rect.height;
-        cx = (touch.clientX - rect.left) * scaleX;
-        cy = (touch.clientY - rect.top) * scaleY;
-    }
-    return { x: cx, y: cy };
+function getTouchCanvasPos(touch) {
+    return { x: touch.clientX, y: touch.clientY };
 }
 
 document.addEventListener('touchstart', function(e) {
@@ -151,18 +127,14 @@ document.addEventListener('touchstart', function(e) {
     
     for(var i=0; i<e.changedTouches.length; i++){
         var t = e.changedTouches[i];
-        var rect = document.getElementById('gameCanvas').getBoundingClientRect();
-        var pos = getTouchCanvasPos(t, rect);
-        // portrait 모드에서는 rect 범위 검사 대신 좌표가 캔버스 내부인지 확인
-        if (pos.x >= 0 && pos.x <= CANVAS_W && pos.y >= 0 && pos.y <= CANVAS_H) {
-            joystick.active = true;
-            joystick.sx = pos.x;
-            joystick.sy = pos.y;
-            joystick.cx = pos.x;
-            joystick.cy = pos.y;
-            joystick.touchId = t.identifier;
-            break;
-        }
+        var pos = getTouchCanvasPos(t);
+        joystick.active = true;
+        joystick.sx = pos.x;
+        joystick.sy = pos.y;
+        joystick.cx = pos.x;
+        joystick.cy = pos.y;
+        joystick.touchId = t.identifier;
+        break;
     }
 }, {passive: false});
 
@@ -171,15 +143,14 @@ document.addEventListener('touchmove', function(e) {
     for(var i=0; i<e.changedTouches.length; i++) {
         var t = e.changedTouches[i];
         if (t.identifier === joystick.touchId) {
-            if (e.cancelable) e.preventDefault(); // 스크롤 등 방지
-            var rect = document.getElementById('gameCanvas').getBoundingClientRect();
-            var pos = getTouchCanvasPos(t, rect);
+            if (e.cancelable) e.preventDefault();
+            var pos = getTouchCanvasPos(t);
             var nx = pos.x;
             var ny = pos.y;
             
             var dx = nx - joystick.sx;
             var dy = ny - joystick.sy;
-            var maxDist = 50;
+            var maxDist = 60;
             var limitDist = Math.sqrt(dx*dx + dy*dy);
             
             if (limitDist > maxDist) {
@@ -286,5 +257,13 @@ function loop() {
 }
 
 // ── 게임 시작 ───────────────────────────────
+// 캔버스 크기를 화면에 맞게 초기화
+updateCanvasSize();
+
+// 화면 크기가 바뀔 때 (가로/세로 전환 등) 캔버스 리사이즈
+window.addEventListener('resize', function() {
+    updateCanvasSize();
+});
+
 goToMainMenu();
 loop();

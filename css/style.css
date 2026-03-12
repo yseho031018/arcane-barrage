@@ -15,17 +15,22 @@ body {
 }
 
 #gameCanvas {
-    border: 2px solid #4a0080;
-    box-shadow: 0 0 30px #6a00cc;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    box-shadow: none;
 }
 
 #ui {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 1000px;
-    height: 600px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     pointer-events: none;
 }
 
@@ -280,61 +285,7 @@ body {
     box-shadow: 0 0 8px #aa44ff;
 }
 
-/* ── 반응형 및 모바일 최적화 ── */
-
-/* 모바일 가로 화면: 화면에 맞게 축소 */
-#gameCanvas {
-    display: block;
-    transition: transform 0.3s ease;
-}
-
-/* 세로(portrait) 화면 처리: 캔버스를 90도 회전하여 채우기 */
-@media (orientation: portrait) {
-    body {
-        overflow: hidden;
-    }
-
-    /* 회전 래퍼: 실제 기기 세로 화면의 너비=화면높이, 높이=화면너비로 맞춤 */
-    #rotateWrapper {
-        transform-origin: center center;
-        transform: rotate(90deg);
-        width: 100vh;
-        height: 100vw;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        margin-top: calc(-50vw);
-        margin-left: calc(-50vh);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-}
-
-/* 가로(landscape) 화면 처리 */
-@media (orientation: landscape) {
-    #rotateWrapper {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-}
-
-/* 게임 화면 전체 스케일링 (가로 기준) */
-@media (max-width: 1000px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) {
-    #ui {
-        transform: translate(-50%, -50%) scale(calc(min(100vw / 1000, 100vh / 600)));
-    }
-}
-
-/* 세로 화면 UI 스케일링: 회전 후 기준치로 계산 */
-@media (orientation: portrait) {
-    #ui {
-        transform: translate(-50%, -50%) scale(calc(min(100vh / 1000, 100vw / 600)));
-    }
-}
+/* ── 반응형 및 모바일 최적화 (풀스크린) ── */
 
 /* 패치 내역 모달 스타일 */
 .modalContent {

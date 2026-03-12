@@ -19,10 +19,9 @@
 
 <body>
 
-    <div id="rotateWrapper">
-        <canvas id="gameCanvas" width="1000" height="600"></canvas>
-        <div id="ui">
-        <div id="topBar">
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+    <div id="topBar">
             <span id="stageDisplay">Stage 1</span>
             <span id="timeDisplay">00:00</span>
             <span id="levelDisplay">Lv.1</span>
@@ -128,7 +127,6 @@
             <button class="mainBtn danger" onclick="goToMainMenu()" style="margin-top:16px;">🏠 메인으로</button>
         </div>
     </div><!-- /#ui -->
-    </div><!-- /#rotateWrapper -->
 
     <!--
   JS 로드 순서 (의존성 순서를 지켜야 함)

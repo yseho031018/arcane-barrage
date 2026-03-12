@@ -3,13 +3,26 @@
 // 게임에서 사용하는 고정 상수 및 스킬 목록 정의
 // ──────────────────────────────────────────────
 
-/** 뷰포트(캔버스) 크기 */
-var CANVAS_W = 1000;
-var CANVAS_H = 600;
+/** 뷰포트(캔버스) 크기 - 풀스크린 동적 설정 */
+var CANVAS_W = window.innerWidth;
+var CANVAS_H = window.innerHeight;
 
 /** 뷰포트 절반 — 카메라 중심 연산에 사용 */
 var HALF_W = CANVAS_W / 2;
 var HALF_H = CANVAS_H / 2;
+
+/** 캔버스 크기를 현재 window 크기에 맞게 갱신 */
+function updateCanvasSize() {
+    var c = document.getElementById('gameCanvas');
+    if (c) {
+        CANVAS_W = window.innerWidth;
+        CANVAS_H = window.innerHeight;
+        HALF_W = CANVAS_W / 2;
+        HALF_H = CANVAS_H / 2;
+        c.width  = CANVAS_W;
+        c.height = CANVAS_H;
+    }
+}
 
 /** 스킬 풀 - 레벨업 시 랜덤으로 3개 제시됨 */
 var SKILLS = [

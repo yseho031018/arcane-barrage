@@ -367,7 +367,7 @@ function drawSkillPanel(p) {
         ctx.textBaseline = 'alphabetic';
         ctx.restore();
 
-        curBottom = pPanelY - PAD - 14; // 라벨 공간 포함해 위로 이동
+        curBottom = pPanelY - PAD - 26; // 라벨("PASSIVE") 글씨가 안 잘리도록 여백 확보
     }
 
     // ── 2. 액티브 패널 (패시브 위) ────────────────────────

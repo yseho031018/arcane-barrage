@@ -101,6 +101,7 @@ function update() {
             } else {
                 p.hp -= ENEMY_TIER.dmg[e.tier];
                 p.invincible = 50;
+                playSound('hurt');
             }
         }
     }
@@ -145,6 +146,7 @@ function update() {
         var collectDist = g.magnetized ? Math.max(15, g.spd + 5) : 40;
 
         if (dist(p, g) < collectDist) {
+            playSound('xp');
             p.xp += g.val;
             while (p.xp >= p.xpMax) {
                 p.xp -= p.xpMax;

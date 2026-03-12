@@ -29,6 +29,7 @@ function getSkillCards(n) {
  */
 function showLevelUp() {
     state.paused = true;
+    playSound('levelup');
 
     var countElem = document.getElementById('pendingLevelUpCount');
     if (countElem) {

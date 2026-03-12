@@ -12,7 +12,7 @@
       gtag('config', 'G-MNYM1N6G7B');
     </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>아케인 배라지 (Arcane Barrage)</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -70,41 +70,41 @@
             </div>
 
             <p id="mainHighScore" style="color: #ffcc00; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px #ffaa00;"></p>
+            
             <button class="mainBtn" onclick="startGame(false)">게임 시작 (일반)</button>
+            
+            <button class="mainBtn" style="margin-top: 15px; font-size: 14px; padding: 10px 20px; background: #2a0050; border: 1px solid #7722ff; opacity: 0.9; width: 220px;" onclick="document.getElementById('patchOverlay').style.display='flex'">📜 패치 내역 확인</button>
 
-            <div id="adminLogin" style="margin-top: 40px; display: flex; flex-direction: column; align-items: center;">
+            <div id="adminLogin" style="margin-top: 30px; display: flex; flex-direction: column; align-items: center;">
                 <input type="text" id="adminId" placeholder="아이디"
                     style="padding:8px; margin-bottom:8px; width:220px; border-radius:4px; border:1px solid #aa44ff; background:#1a0030; color:#fff; text-align:center;">
                 <input type="password" id="adminPw" placeholder="비밀번호"
                     style="padding:8px; margin-bottom:8px; width:220px; border-radius:4px; border:1px solid #aa44ff; background:#1a0030; color:#fff; text-align:center;">
-                <button class="mainBtn" style="font-size:16px; padding:10px; width:220px;" onclick="tryAdminLogin()">관리자
-                    계정으로 시작</button>
+                <button class="mainBtn" style="font-size:16px; padding:10px; width:220px;" onclick="tryAdminLogin()">관리자 계정으로 시작</button>
                 <div id="loginMsg" style="color:#ff4444; font-size:14px; margin-top:8px; height:20px;"></div>
             </div>
-
-            <!-- 패치 내역 버튼 -->
-            <button class="mainBtn" style="margin-top: 20px; font-size: 14px; padding: 10px 20px; background: #2a0050; border: 1px solid #7722ff; opacity: 0.9;" onclick="document.getElementById('patchOverlay').style.display='flex'">📜 패치 내역 확인</button>
+        </div>
 
             <!-- 패치 내역 팝업 오버레이 -->
             <div id="patchOverlay" class="overlayScreen" style="display: none; background: rgba(0,0,0,0.85); z-index: 2000;" onclick="if(event.target === this) this.style.display='none'">
-                <div id="patchNotes" style="width: 500px; background: #1a0033; padding: 25px; border-radius: 16px; border: 2px solid #8844ff; box-shadow: 0 0 30px rgba(136, 68, 255, 0.4); pointer-events: auto;">
+                <div id="patchNoteContent" class="modalContent">
                     <h3 style="margin: 0 0 20px 0; color: #cc88ff; font-size: 20px; border-bottom: 2px solid #5522aa; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
                         📜 패치 내역 (Patch Notes)
                         <span style="cursor: pointer; font-size: 24px; color: #aaa;" onclick="document.getElementById('patchOverlay').style.display='none'">&times;</span>
                     </h3>
-                    <div style="max-height: 400px; overflow-y: auto; color: #bbbbdd; font-size: 14px; line-height: 1.8; padding-right: 15px; text-align: left;">
-                        <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #331155;">
-                            <strong style="color: #00ffcc; font-size: 16px;">[v1.5.0] 실시간 통계</strong><br>
+                    <div class="patchScrollArea">
+                        <div class="patchItem">
+                            <strong style="color: #00ffcc;">[v1.5.0] 실시간 통계</strong><br>
                             • 실시간 접속자 및 누적 방문자 표시 기능 추가 (Firebase)<br>
                             • Google Analytics 4 연동 완료
                         </div>
-                        <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #331155;">
-                            <strong style="color: #ffcc00; font-size: 16px;">[v1.4.0] UI 최적화</strong><br>
+                        <div class="patchItem">
+                            <strong style="color: #ffcc00;">[v1.4.0] UI 최적화</strong><br>
                             • 스킬별 레벨 및 쿨타임 게이지 시각화<br>
                             • 액티브/패시브 스킬 렌더링 분리 및 가독성 개선
                         </div>
-                        <div style="margin-bottom: 20px;">
-                            <strong style="color: #ff55aa; font-size: 16px;">[v1.3.0] 모바일 대응</strong><br>
+                        <div class="patchItem" style="border-bottom: none;">
+                            <strong style="color: #ff55aa;">[v1.3.0] 모바일 대응</strong><br>
                             • 모바일 조이스틱 조작계 및 데미지 텍스트 효과 추가<br>
                             • 로컬 최고 기록 시스템 구현
                         </div>

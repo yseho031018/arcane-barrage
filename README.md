@@ -1,6 +1,6 @@
 # 🌟 아케인 배라지 (Arcane Barrage)
 
-![Game Status](https://img.shields.io/badge/Status-v1.5.0-blue)
+![Game Status](https://img.shields.io/badge/Status-v1.5.1-blue)
 [![Live Demo](https://img.shields.io/badge/Demo-Play%20Now-brightgreen)](https://yseho031018.github.io/arcane-barrage/)
 ![Platform](https://img.shields.io/badge/Platform-Web-success)
 
@@ -37,6 +37,11 @@
 ---
 
 ## 📜 업데이트 내역 (Changelog)
+
+### v1.5.1 (모바일 최적화 및 UI 팝업 시스템)
+*   **패치 노트 팝업화:** 기존의 패치 내역을 메인 화면에 고정하던 방식에서 오버레이 팝업(Modal) 방식으로 개편
+*   **반응형 캔버스 최적화:** 브라우저 크기나 모바일 기기 화면 비율에 맞춰 캔버스와 UI가 100% 자동 축소(Scale)되도록 개선
+*   **모바일 사용성 개선:** 버튼 위치 및 여백을 모바일 터치에 맞게 조정하고, 화면 터치 시 브라우저 확대(Zoom) 오작동 방지 처리
 
 ### v1.5.0 (실시간 분석 및 방문자 통계 업데이트)
 *   **실시간 접속자 카운트:** Firebase Realtime Database 연동을 통해 현재 게임을 플레이 중인 인원수를 실시간으로 메인 화면에 표시

@@ -34,7 +34,7 @@ function startGame(isAdminLogin) {
         setTimeout(function() {
             startBgm();
             var btn = document.getElementById('bgmBtn');
-            if (btn) btn.textContent = '🎵 BGM ON';
+            if (btn) btn.textContent = '🎵 BGM ON (B)';
         }, 100);
     }
 
@@ -132,6 +132,6 @@ function goToMainMenu() {
     if (typeof stopBgm === 'function') {
         stopBgm();
         var btn = document.getElementById('bgmBtn');
-        if (btn) btn.textContent = '🔇 BGM OFF';
+        if (btn) btn.textContent = '🔇 BGM OFF (B)';
     }
 }

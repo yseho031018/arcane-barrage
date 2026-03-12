@@ -303,10 +303,10 @@ function toggleBgm() {
     var btn = document.getElementById('bgmBtn');
     if (bgmPlaying) {
         stopBgm();
-        if (btn) btn.textContent = '🔇 BGM OFF';
+        if (btn) btn.textContent = '🔇 BGM OFF (B)';
     } else {
         startBgm();
-        if (btn) btn.textContent = '🎵 BGM ON';
+        if (btn) btn.textContent = '🎵 BGM ON (B)';
     }
 }
 
@@ -314,5 +314,5 @@ function toggleBgm() {
 function toggleSfx() {
     sfxEnabled = !sfxEnabled;
     var btn = document.getElementById('sfxBtn');
-    if (btn) btn.textContent = sfxEnabled ? '🔊 SFX ON' : '🔇 SFX OFF';
+    if (btn) btn.textContent = sfxEnabled ? '🔊 SFX ON (N)' : '🔇 SFX OFF (N)';
 }

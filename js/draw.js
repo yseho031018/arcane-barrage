@@ -295,82 +295,165 @@ function draw() {
 }
 
 /**
- * 화면 좌측 하단에 현재 보유 스킬 패널을 그린다.
- * 레벨이 0인 스킬(미보유)은 표시하지 않는다.
+ * 화면 좌측 하단에 보유 스킬 패널을 그린다.
+ *   - 상단 : 액티브 스킬 (큰 아이콘 + 쿨타임 게이지 바)
+ *   - 하단 : 패시브 스킬 (작은 아이콘 + Lv 배지)
  */
 function drawSkillPanel(p) {
-    var ICON_SIZE  = 34;  // 아이콘 박스 크기
-    var PADDING    = 6;   // 아이콘 간격
-    var PANEL_X    = 10;  // 패널 시작 X
-    var PANEL_BOTTOM = CANVAS_H - 10; // 패널 하단 기준
-    var COLS       = 7;   // 한 줄에 최대 7개
+    var PANEL_X      = 10;
+    var PANEL_BOTTOM = CANVAS_H - 10;
+    var PAD          = 6;
 
-    // 보유한 스킬만 모은다
-    var owned = [];
+    // ── 스킬 분류 ──────────────────────────────────────
+    var passives = [], actives = [];
     for (var s = 0; s < SKILLS.length; s++) {
         var sk = SKILLS[s];
         var lv = sk.getLevel ? sk.getLevel(p) : 0;
-        if (lv > 0) {
-            owned.push({ sk: sk, lv: lv });
-        }
+        if (lv <= 0) continue;
+        if (sk.active) actives.push({ sk: sk, lv: lv });
+        else           passives.push({ sk: sk, lv: lv });
     }
-    // 이동속도·HP는 '몇 번 선택했는지' 추적 필요: 별도로 체크
-    // (speed 스킬은 getLevel=0 이라 표시 안 됨 — 의도적)
 
-    if (owned.length === 0) return;
+    // ── 1. 패시브 패널 (하단) ──────────────────────────
+    var P_SIZE = 34, P_GAP = 6, P_COLS = 7;
+    var curBottom = PANEL_BOTTOM;
 
-    var rows     = Math.ceil(owned.length / COLS);
-    var cellW    = ICON_SIZE + PADDING;
-    var cellH    = ICON_SIZE + PADDING;
-    var totalW   = Math.min(owned.length, COLS) * cellW - PADDING + PADDING * 2;
-    var totalH   = rows * cellH - PADDING + PADDING * 2;
-    var panelY   = PANEL_BOTTOM - totalH;
+    if (passives.length > 0) {
+        var pRows  = Math.ceil(passives.length / P_COLS);
+        var pCellW = P_SIZE + P_GAP;
+        var pCellH = P_SIZE + P_GAP;
+        var pTotalW = Math.min(passives.length, P_COLS) * pCellW - P_GAP + PAD * 2;
+        var pTotalH = pRows * pCellH - P_GAP + PAD * 2;
+        var pPanelY = curBottom - pTotalH;
 
-    // 반투명 배경
-    ctx.save();
-    ctx.globalAlpha = 0.72;
-    ctx.fillStyle = '#0d0d1e';
-    ctx.beginPath();
-    ctx.roundRect(PANEL_X - PADDING, panelY - PADDING, totalW, totalH + PADDING * 2, 8);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // 테두리
-    ctx.strokeStyle = '#4422aa';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(PANEL_X - PADDING, panelY - PADDING, totalW, totalH + PADDING * 2, 8);
-    ctx.stroke();
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    for (var i = 0; i < owned.length; i++) {
-        var col  = i % COLS;
-        var row  = Math.floor(i / COLS);
-        var bx   = PANEL_X + col * cellW;
-        var by   = panelY  + row * cellH;
-        var sk   = owned[i].sk;
-        var lv   = owned[i].lv;
-
-        // 아이콘 배경
-        ctx.globalAlpha = 0.9;
-        ctx.fillStyle = '#1a0a33';
-        ctx.beginPath();
-        ctx.roundRect(bx, by, ICON_SIZE, ICON_SIZE, 6);
-        ctx.fill();
-
-        // 아이콘 (이모지)
+        ctx.save();
+        // 배경
+        ctx.globalAlpha = 0.70;
+        ctx.fillStyle = '#0a0a1a';
+        ctx.beginPath(); ctx.roundRect(PANEL_X - PAD, pPanelY - PAD, pTotalW, pTotalH + PAD * 2, 8); ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.font = '18px serif';
-        ctx.fillText(sk.icon, bx + ICON_SIZE / 2, by + ICON_SIZE / 2 - 4);
+        // 라벨
+        ctx.font = 'bold 9px Arial';
+        ctx.fillStyle = '#8877cc';
+        ctx.textAlign = 'left';
+        ctx.fillText('PASSIVE', PANEL_X, pPanelY - PAD - 3);
+        // 테두리
+        ctx.strokeStyle = '#3311aa';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.roundRect(PANEL_X - PAD, pPanelY - PAD, pTotalW, pTotalH + PAD * 2, 8); ctx.stroke();
 
-        // 레벨 배지
-        ctx.font = 'bold 10px Arial';
-        ctx.fillStyle = '#ffdd55';
-        ctx.fillText('Lv.' + lv, bx + ICON_SIZE / 2, by + ICON_SIZE - 7);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (var i = 0; i < passives.length; i++) {
+            var col = i % P_COLS;
+            var row = Math.floor(i / P_COLS);
+            var bx  = PANEL_X + col * pCellW;
+            var by  = pPanelY + row * pCellH;
+            var sk  = passives[i].sk;
+            var lv  = passives[i].lv;
+            // 아이콘 배경
+            ctx.globalAlpha = 0.88;
+            ctx.fillStyle = '#180830';
+            ctx.beginPath(); ctx.roundRect(bx, by, P_SIZE, P_SIZE, 5); ctx.fill();
+            ctx.globalAlpha = 1;
+            // 아이콘
+            ctx.font = '17px serif';
+            ctx.fillText(sk.icon, bx + P_SIZE / 2, by + P_SIZE / 2 - 4);
+            // Lv 배지
+            ctx.font = 'bold 9px Arial';
+            ctx.fillStyle = '#ffdd55';
+            ctx.fillText('Lv.' + lv, bx + P_SIZE / 2, by + P_SIZE - 6);
+        }
+        ctx.textBaseline = 'alphabetic';
+        ctx.restore();
+
+        curBottom = pPanelY - PAD - 14; // 라벨 공간 포함해 위로 이동
     }
 
-    ctx.textBaseline = 'alphabetic';
-    ctx.restore();
+    // ── 2. 액티브 패널 (패시브 위) ────────────────────────
+    var A_SIZE   = 44;  // 아이콘 박스
+    var A_BAR_H  = 6;   // 쿨타임 바 높이
+    var A_CELL_H = A_SIZE + A_BAR_H + 4 + PAD; // 전체 셀 높이
+    var A_CELL_W = A_SIZE + PAD;
+    var A_GAP    = 2;
+
+    if (actives.length > 0) {
+        var aTotalW = actives.length * A_CELL_W - PAD + PAD * 2;
+        var aTotalH = A_CELL_H - PAD + PAD * 2;
+        var aPanelY = curBottom - aTotalH;
+
+        ctx.save();
+        // 배경
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = '#0d0a22';
+        ctx.beginPath(); ctx.roundRect(PANEL_X - PAD, aPanelY - PAD, aTotalW, aTotalH + PAD * 2, 8); ctx.fill();
+        ctx.globalAlpha = 1;
+        // 라벨
+        ctx.font = 'bold 9px Arial';
+        ctx.fillStyle = '#ffcc44';
+        ctx.textAlign = 'left';
+        ctx.fillText('ACTIVE', PANEL_X, aPanelY - PAD - 3);
+        // 테두리
+        ctx.strokeStyle = '#aaaa22';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.roundRect(PANEL_X - PAD, aPanelY - PAD, aTotalW, aTotalH + PAD * 2, 8); ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        for (var i = 0; i < actives.length; i++) {
+            var bx  = PANEL_X + i * A_CELL_W;
+            var by  = aPanelY;
+            var sk  = actives[i].sk;
+            var lv  = actives[i].lv;
+
+            var maxCd = sk.getMaxCd ? sk.getMaxCd(p) : 1;
+            var curCd = sk.getCurCd ? sk.getCurCd(p) : 0;
+            var ready = curCd <= 0;
+            // 게이지: 0=쿨다운 직후(꽉 참), maxCd=방금 발동(비어있음)
+            var fillRatio = ready ? 1 : 1 - (curCd / maxCd);
+
+            // 아이콘 배경 (준비되면 금테, 쿨중이면 보라)
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = ready ? '#1a140a' : '#100818';
+            ctx.beginPath(); ctx.roundRect(bx, by, A_SIZE, A_SIZE, 7); ctx.fill();
+            // 배경 테두리
+            ctx.strokeStyle = ready ? '#ffcc44' : '#553388';
+            ctx.lineWidth = ready ? 1.8 : 1;
+            ctx.beginPath(); ctx.roundRect(bx, by, A_SIZE, A_SIZE, 7); ctx.stroke();
+            ctx.globalAlpha = 1;
+
+            // 아이콘 (이모지)
+            ctx.font = '22px serif';
+            ctx.fillText(sk.icon, bx + A_SIZE / 2, by + A_SIZE / 2 - 5);
+
+            // Lv 배지 (아이콘 우하단)
+            ctx.font = 'bold 9px Arial';
+            ctx.fillStyle = ready ? '#ffee77' : '#aa88ff';
+            ctx.fillText('Lv.' + lv, bx + A_SIZE / 2, by + A_SIZE - 6);
+
+            // 쿨타임 게이지 바
+            var barX = bx;
+            var barY = by + A_SIZE + 3;
+            var barW = A_SIZE;
+            // 바 배경
+            ctx.fillStyle = '#1a1a2e';
+            ctx.beginPath(); ctx.roundRect(barX, barY, barW, A_BAR_H, 3); ctx.fill();
+            // 충전 게이지 (준비되면 황금, 발동 직전이면 청록, 충전중이면 보라)
+            if (fillRatio > 0) {
+                var barColor;
+                if (ready)             barColor = '#ffcc00';
+                else if (fillRatio > 0.75) barColor = '#44eebb';
+                else                   barColor = '#8844ff';
+
+                ctx.fillStyle = barColor;
+                ctx.shadowColor = barColor;
+                ctx.shadowBlur = 4;
+                ctx.beginPath(); ctx.roundRect(barX, barY, barW * fillRatio, A_BAR_H, 3); ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+        ctx.textBaseline = 'alphabetic';
+        ctx.restore();
+    }
 }

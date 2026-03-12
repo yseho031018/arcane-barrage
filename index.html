@@ -59,6 +59,16 @@
         <div id="mainMenu" class="overlayScreen">
             <h1>아케인 배라지</h1>
             <p>끝없이 다가오는 적들을 물리치세요!</p>
+            
+            <div id="statsPanel" style="background: rgba(40, 0, 80, 0.6); padding: 12px 20px; border-radius: 12px; border: 1px solid #aa44ff; margin-bottom: 24px; display: inline-block;">
+                <div style="font-size: 14px; color: #ccaaee; margin-bottom: 4px;">
+                    👥 실시간 플레이어: <span id="onlineCount" style="color: #00ffcc; font-weight: bold; font-size: 18px;">-</span>명
+                </div>
+                <div style="font-size: 14px; color: #ccaaee;">
+                    ✨ 누적 총 방문자: <span id="totalVisits" style="color: #ffcc00; font-weight: bold;">-</span>명
+                </div>
+            </div>
+
             <p id="mainHighScore" style="color: #ffcc00; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px #ffaa00;"></p>
             <button class="mainBtn" onclick="startGame(false)">게임 시작 (일반)</button>
 
@@ -103,6 +113,8 @@
     <script src="js/draw.js"></script>
     <script src="js/update.js"></script>
     <script src="js/main.js"></script>
+    <!-- Firebase 실시간 기능 (가장 마지막에 로드) -->
+    <script type="module" src="js/firebase-handler.js"></script>
 
 </body>
 

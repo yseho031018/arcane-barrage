@@ -47,6 +47,21 @@ function update() {
     // ── 플레이어 행동 ────────────────────────
     updatePlayerMove();
 
+    // ── 화면 흔들림 & 데미지 텍스트 ────────────────
+    if (state.camShake > 0) state.camShake *= 0.85;
+    if (state.camShake < 0.5) state.camShake = 0;
+
+    var newDt = [];
+    if (state.damageTexts) {
+        for (var i = 0; i < state.damageTexts.length; i++) {
+            var dt = state.damageTexts[i];
+            dt.t--;
+            dt.y -= 0.6; // 위로 통통 튀어오르는 연출
+            if (dt.t > 0) newDt.push(dt);
+        }
+        state.damageTexts = newDt;
+    }
+
     // ── 카메라 추종 ──────────────────────────
     state.cam.x = p.x - HALF_W;
     state.cam.y = p.y - HALF_H;
@@ -94,6 +109,7 @@ function update() {
         if (dist(p, e) < 16 + e.r && p.invincible <= 0) {
             if (p.thornsLv > 0) {
                 e.hp -= p.thornsLv * 15;
+                if (typeof addDamageText === 'function') addDamageText(e.x, e.y, p.thornsLv * 15, false, '#aaaaaa');
             }
 
             if (p.shield > 0 && p.shieldCd <= 0) {
@@ -101,7 +117,9 @@ function update() {
             } else {
                 p.hp -= ENEMY_TIER.dmg[e.tier];
                 p.invincible = 50;
+                state.camShake = 8;
                 playSound('hurt');
+                if (typeof addDamageText === 'function') addDamageText(p.x, p.y - 12, ENEMY_TIER.dmg[e.tier], false, '#ff4444');
             }
         }
     }
@@ -183,8 +201,22 @@ function update() {
     // ── 게임 오버 판정 ───────────────────────
     if (p.hp <= 0) {
         var sec = Math.floor(state.time / 60);
-        document.getElementById('goTime').textContent = '생존: ' + pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
-        document.getElementById('goKills').textContent = '처치: ' + state.kills;
+        
+        // 최고 기록 통신 및 저장
+        var bestTime = parseInt(localStorage.getItem('arcane_best_time') || 0);
+        var bestKills = parseInt(localStorage.getItem('arcane_best_kills') || 0);
+        
+        if (state.time > bestTime) localStorage.setItem('arcane_best_time', state.time);
+        if (state.kills > bestKills) localStorage.setItem('arcane_best_kills', state.kills);
+        
+        var maxTime = Math.max(bestTime, state.time);
+        var maxSec = Math.floor(maxTime / 60);
+
+        var curTimeStr = pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
+        var bestTimeStr = pad(Math.floor(maxSec / 60)) + ':' + pad(maxSec % 60);
+
+        document.getElementById('goTime').textContent = '버틴 시간: ' + curTimeStr + ' (최고: ' + bestTimeStr + ')';
+        document.getElementById('goKills').textContent = '처치 수: ' + state.kills + ' (최고: ' + Math.max(bestKills, state.kills) + ')';
         document.getElementById('gameOver').style.display = 'flex';
         state.paused = true;
     }

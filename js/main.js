@@ -89,6 +89,16 @@ document.addEventListener('keydown', function (e) {
 
     // 일시정지(메뉴) 단축키
     if (e.key === 'Escape') { toggleMenu(); }
+
+    // BGM 켜기/끄기 단축키 (B키) — 오버레이 없을 때만
+    if (e.key === 'b' || e.key === 'B') {
+        if (typeof toggleBgm === 'function') { toggleBgm(); }
+    }
+
+    // SFX 켜기/끄기 단축키 (N키)
+    if (e.key === 'n' || e.key === 'N') {
+        if (typeof toggleSfx === 'function') { toggleSfx(); }
+    }
 });
 document.addEventListener('keyup', function (e) { keys[e.key] = false; });
 
@@ -98,6 +108,77 @@ document.addEventListener('mousemove', function (e) {
     var rect = document.getElementById('gameCanvas').getBoundingClientRect();
     state.mouse.x = e.clientX - rect.left;
     state.mouse.y = e.clientY - rect.top;
+});
+
+// ── 모바일 터치 조이스틱 ────────────────────
+var joystick = { active: false, sx: 0, sy: 0, cx: 0, cy: 0, dx: 0, dy: 0, touchId: null };
+var CANVAS_W = 1000, CANVAS_H = 600; // 해상도 상수
+
+document.addEventListener('touchstart', function(e) {
+    if (!state || state.paused) return;
+    // UI 버튼 터치면 무시
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+    
+    for(var i=0; i<e.changedTouches.length; i++){
+        var t = e.changedTouches[i];
+        var rect = document.getElementById('gameCanvas').getBoundingClientRect();
+        if (t.clientX >= rect.left && t.clientX <= rect.right &&
+            t.clientY >= rect.top && t.clientY <= rect.bottom) {
+            
+            var scaleX = CANVAS_W / rect.width;
+            var scaleY = CANVAS_H / rect.height;
+
+            joystick.active = true;
+            joystick.sx = (t.clientX - rect.left) * scaleX;
+            joystick.sy = (t.clientY - rect.top) * scaleY;
+            joystick.cx = joystick.sx;
+            joystick.cy = joystick.sy;
+            joystick.touchId = t.identifier;
+            break;
+        }
+    }
+}, {passive: false});
+
+document.addEventListener('touchmove', function(e) {
+    if (!joystick.active || !state || state.paused) return;
+    for(var i=0; i<e.changedTouches.length; i++) {
+        var t = e.changedTouches[i];
+        if (t.identifier === joystick.touchId) {
+            if (e.cancelable) e.preventDefault(); // 스크롤 등 방지
+            var rect = document.getElementById('gameCanvas').getBoundingClientRect();
+            var scaleX = CANVAS_W / rect.width;
+            var scaleY = CANVAS_H / rect.height;
+            var nx = (t.clientX - rect.left) * scaleX;
+            var ny = (t.clientY - rect.top) * scaleY;
+            
+            var dx = nx - joystick.sx;
+            var dy = ny - joystick.sy;
+            var maxDist = 50;
+            var limitDist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (limitDist > maxDist) {
+                dx = (dx / limitDist) * maxDist;
+                dy = (dy / limitDist) * maxDist;
+                nx = joystick.sx + dx;
+                ny = joystick.sy + dy;
+            }
+            joystick.cx = nx;
+            joystick.cy = ny;
+            joystick.dx = dx / maxDist;
+            joystick.dy = dy / maxDist;
+        }
+    }
+}, {passive: false});
+
+document.addEventListener('touchend', function(e) {
+    for(var i=0; i<e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joystick.touchId) {
+            joystick.active = false;
+            joystick.dx = 0;
+            joystick.dy = 0;
+            joystick.touchId = null;
+        }
+    }
 });
 
 // ── 개발자용 치트 기능 ─────────────────────

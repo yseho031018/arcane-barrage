@@ -18,6 +18,8 @@
             <span id="levelDisplay">Lv.1</span>
             <span id="killDisplay">0</span>
             <button id="menuBtn" class="topBarBtn" onclick="toggleMenu()">☰ 메뉴 (ESC)</button>
+            <button id="bgmBtn" class="topBarBtn" onclick="toggleBgm()">🎵 BGM ON (B)</button>
+            <button id="sfxBtn" class="topBarBtn" onclick="toggleSfx()">🔊 SFX ON (N)</button>
         </div>
         <div id="xpBar">
             <div id="xpFill" style="width:0%"></div>
@@ -48,6 +50,7 @@
         <div id="mainMenu" class="overlayScreen">
             <h1>아케인 배라지</h1>
             <p>끝없이 다가오는 적들을 물리치세요!</p>
+            <p id="mainHighScore" style="color: #ffcc00; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px #ffaa00;"></p>
             <button class="mainBtn" onclick="startGame(false)">게임 시작 (일반)</button>
 
             <div id="adminLogin" style="margin-top: 40px; display: flex; flex-direction: column; align-items: center;">

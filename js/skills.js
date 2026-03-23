@@ -45,12 +45,12 @@ function showLevelUp() {
     div.innerHTML = '';
 
     for (var i = 0; i < cards.length; i++) {
-        (function (sk) {
+        (function (sk, idx) {
             var c = document.createElement('div');
             c.className = 'card';
             c.innerHTML =
                 '<div class="icon">' + sk.icon + '</div>' +
-                '<div class="name"><span style="color:#aaa; font-size:12px;">[' + (i + 1) + ']</span> ' + sk.name + '</div>' +
+                '<div class="name"><span style="color:#aaa; font-size:12px;">[' + (idx + 1) + ']</span> ' + sk.name + '</div>' +
                 '<div class="desc">' + sk.desc + '</div>';
 
             c.onclick = function () {
@@ -67,7 +67,23 @@ function showLevelUp() {
             };
 
             div.appendChild(c);
-        })(cards[i]);
+        })(cards[i], i);
+    }
+
+    // ── 리롤 버튼 ──────────────────────────────────
+    var rerollDiv = document.getElementById('rerollArea');
+    if (rerollDiv) {
+        var p = state.player;
+        if (p.rerollsLeft > 0) {
+            rerollDiv.innerHTML = '<button id="rerollBtn" class="rerollBtn">🔀 다시 뽑기 (남은 횟수: ' + p.rerollsLeft + ')</button>';
+            document.getElementById('rerollBtn').onclick = function () {
+                p.rerollsLeft--;
+                playSound('click');
+                showLevelUp(); // 새 카드 3장 재표시
+            };
+        } else {
+            rerollDiv.innerHTML = '<span style="color:#555; font-size:13px;">리롤 소진</span>';
+        }
     }
 
     document.getElementById('levelUp').style.display = 'flex';

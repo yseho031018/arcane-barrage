@@ -105,6 +105,46 @@ function playSound(type) {
         gainNode.gain.setValueAtTime(0.15, now);
         gainNode.gain.linearRampToValueAtTime(0.01, now + 0.2);
         osc.start(now); osc.stop(now + 0.2);
+
+    } else if (type === 'boss') {
+        // 보스 등장: 낮고 무거운 경고음 + 화음
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(55, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.8);
+        gainNode.gain.setValueAtTime(0.25, now);
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.9);
+        osc.start(now); osc.stop(now + 0.9);
+        // 두 번째 오실레이터로 불협화음 효과
+        var osc2 = audioCtx.createOscillator();
+        var g2 = audioCtx.createGain();
+        osc2.connect(g2); g2.connect(audioCtx.destination);
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(110, now + 0.1);
+        osc2.frequency.linearRampToValueAtTime(75, now + 0.8);
+        g2.gain.setValueAtTime(0.1, now + 0.1);
+        g2.gain.linearRampToValueAtTime(0.01, now + 0.9);
+        osc2.start(now + 0.1); osc2.stop(now + 0.9);
+
+    } else if (type === 'stageclear') {
+        // 스테이지 클리어: 상승하는 팡파르
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.setValueAtTime(554, now + 0.12);
+        osc.frequency.setValueAtTime(659, now + 0.24);
+        osc.frequency.setValueAtTime(880, now + 0.36);
+        osc.frequency.setValueAtTime(1108, now + 0.5);
+        gainNode.gain.setValueAtTime(0.18, now);
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.85);
+        osc.start(now); osc.stop(now + 0.85);
+
+    } else if (type === 'click') {
+        // UI 버튼 클릭: 짧고 경쾌한 틱 소리
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.06);
+        gainNode.gain.setValueAtTime(0.04, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.start(now); osc.stop(now + 0.06);
     }
 }
 

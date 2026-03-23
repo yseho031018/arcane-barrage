@@ -40,19 +40,22 @@
             <button class="devBtn" onclick="forceLevelUp()">⭐ 강제 레벨업 [U]</button>
             <button class="devBtn" onclick="forceNextStage()">🚀 다음 스테이지 [I]</button>
             <button class="devBtn" onclick="absorbAllExp()">🧲 경험치 흡수 [E]</button>
+            <button class="devBtn" onclick="spawnBossCheat()">👑 보스 소환 [O]</button>
         </div>
 
         <div id="levelUp">
             <h2>LEVEL UP! <span id="pendingLevelUpCount"
                     style="font-size: 18px; color: #ffeb3b; margin-left:10px;"></span></h2>
             <div id="cards"></div>
+            <div id="rerollArea" style="margin-top:14px; text-align:center;"></div>
         </div>
         <div id="gameOver">
             <h2>GAME OVER</h2>
             <p id="goTime"></p>
             <p id="goKills"></p>
+            <p id="goStage" style="color:#aaddff; font-size:14px; margin-top:4px;"></p>
             <button class="mainBtn" onclick="startGame(isAdmin)">게임 다시하기</button>
-            <button class="mainBtn danger" onclick="goToMainMenu()" style="margin-top:16px;">메인으로</button>
+            <button class="mainBtn" onclick="goToMainMenu()" style="margin-top:16px;">메인으로</button>
         </div>
 
         <!-- 메인 화면 -->
@@ -71,7 +74,17 @@
 
             <p id="mainHighScore" style="color: #ffcc00; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px #ffaa00;"></p>
             
-            <button class="mainBtn" onclick="startGame(false)">게임 시작 (일반)</button>
+            <!-- 난이도 선택 -->
+            <div style="margin-bottom: 16px;">
+                <p style="color:#aaaacc; font-size:13px; margin-bottom:8px;">난이도 선택</p>
+                <div style="display:flex; gap:8px; justify-content:center;">
+                    <button id="diff_easy"   class="mainBtn diffBtn" onclick="setDifficulty('easy')">🌱 쉬움</button>
+                    <button id="diff_normal" class="mainBtn diffActive" onclick="setDifficulty('normal')">⚔ 보통</button>
+                    <button id="diff_hard"   class="mainBtn diffBtn" onclick="setDifficulty('hard')">💀 어려움</button>
+                </div>
+            </div>
+
+            <button class="mainBtn" onclick="startGame(false)">게임 시작</button>
             
             <button class="mainBtn" style="margin-top: 15px; font-size: 14px; padding: 10px 20px; background: #2a0050; border: 1px solid #7722ff; opacity: 0.9; width: 220px;" onclick="document.getElementById('patchOverlay').style.display='flex'">📜 패치 내역 확인</button>
 
@@ -93,6 +106,13 @@
                         <span style="cursor: pointer; font-size: 24px; color: #aaa;" onclick="document.getElementById('patchOverlay').style.display='none'">&times;</span>
                     </h3>
                     <div class="patchScrollArea">
+                        <div class="patchItem">
+                            <strong style="color: #ffaa44;">[v1.6.0] 보스 다중 타입 시스템</strong><br>
+                            • 👁 감시자 / ⚡ 폭풍술사 / ☠ 독술사 — 랜덤 보스 3종 추가<br>
+                            • 보스 전투 영역(아레나) — 영역 밖 이탈 불가<br>
+                            • 대시형 적(Dasher), 난이도 선택, 리롤 기능 추가<br>
+                            • 공간 격자 충돌 최적화 및 보스 사운드 추가
+                        </div>
                         <div class="patchItem">
                             <strong style="color: #66ccff;">[v1.5.1] 모바일 UI 최적화</strong><br>
                             • 패치 노트 팝업창(Modal) 도입 및 모바일 해상도 맞춤 스케일링<br>
@@ -124,7 +144,7 @@
             <h2>⏸ 일시 정지</h2>
             <button class="mainBtn" onclick="toggleMenu()">▶ 이어하기 (ESC)</button>
             <button class="mainBtn" onclick="startGame(isAdmin)" style="margin-top:16px;">🔄 게임 다시하기</button>
-            <button class="mainBtn danger" onclick="goToMainMenu()" style="margin-top:16px;">🏠 메인으로</button>
+            <button class="mainBtn" onclick="goToMainMenu()" style="margin-top:16px;">🏠 메인으로</button>
         </div>
     </div><!-- /#ui -->
 

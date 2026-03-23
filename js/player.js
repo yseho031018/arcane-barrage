@@ -77,10 +77,11 @@ function updateSword() {
     p.swordCd--;
     if (p.swordCd <= 0) {
         p.swordCd = 18;
-        for (var i = 0; i < state.enemies.length; i++) {
-            if (dist(p, state.enemies[i]) < p.swordR + state.enemies[i].r) {
-                state.enemies[i].hp -= p.swordDmg;
-                if (typeof addDamageText === 'function') addDamageText(state.enemies[i].x, state.enemies[i].y, p.swordDmg, false, '#cc88ff');
+        var nearSword = getEnemiesNear(p.x, p.y, p.swordR + 60);
+        for (var i = 0; i < nearSword.length; i++) {
+            if (dist(p, nearSword[i]) < p.swordR + nearSword[i].r) {
+                nearSword[i].hp -= p.swordDmg;
+                if (typeof addDamageText === 'function') addDamageText(nearSword[i].x, nearSword[i].y, p.swordDmg, false, '#cc88ff');
             }
         }
     }
@@ -101,8 +102,9 @@ function updateProjectiles() {
         if (b.life <= 0) continue;
 
         var hit = false;
-        for (var j = 0; j < state.enemies.length; j++) {
-            var en = state.enemies[j];
+        var nearProj = getEnemiesNear(b.x, b.y, b.r + 60);
+        for (var j = 0; j < nearProj.length; j++) {
+            var en = nearProj[j];
             if (b.hitEnemies.includes(en)) continue; // 이미 타격한 적 무시
 
             if (!hit && dist(b, en) < b.r + en.r) {
@@ -174,8 +176,9 @@ function updateSubProjectiles() {
         if (b.life <= 0) continue;
 
         var hit = false;
-        for (var j = 0; j < state.enemies.length; j++) {
-            var en = state.enemies[j];
+        var nearSub = getEnemiesNear(b.x, b.y, b.r + 60);
+        for (var j = 0; j < nearSub.length; j++) {
+            var en = nearSub[j];
             if (b.hitEnemies.includes(en)) continue;
             if (dist(b, en) < b.r + en.r) {
                 en.hp -= b.dmg;
@@ -204,14 +207,15 @@ function updateOrbs() {
         var ox = p.x + Math.cos(a) * 60;
         var oy = p.y + Math.sin(a) * 60;
 
-        for (var j = 0; j < state.enemies.length; j++) {
-            var ex = state.enemies[j].x, ey = state.enemies[j].y;
-            var er = state.enemies[j].r;
+        var nearOrb = getEnemiesNear(ox, oy, 9 + 60);
+        for (var j = 0; j < nearOrb.length; j++) {
+            var ex = nearOrb[j].x, ey = nearOrb[j].y;
+            var er = nearOrb[j].r;
             var dx = ox - ex, dy2 = oy - ey;
             if (Math.sqrt(dx * dx + dy2 * dy2) < er + 9) {
-                state.enemies[j].hp -= 0.6;
+                nearOrb[j].hp -= 0.6;
                 if (Math.random() < 0.1 && typeof addDamageText === 'function') {
-                    addDamageText(ex, ey, 6, false, '#aa44ff'); // 딜레이를 둬서 뭉쳐 보이게 함
+                    addDamageText(ex, ey, 6, false, '#aa44ff');
                 }
             }
         }
@@ -250,11 +254,12 @@ function updateAura() {
     if (p.auraLv <= 0) return;
 
     var range = 50 + p.auraLv * 15;
-    for (var i = 0; i < state.enemies.length; i++) {
-        if (dist(p, state.enemies[i]) < range) {
-            state.enemies[i].hp -= p.auraLv * 0.12;
+    var nearAura = getEnemiesNear(p.x, p.y, range);
+    for (var i = 0; i < nearAura.length; i++) {
+        if (dist(p, nearAura[i]) < range) {
+            nearAura[i].hp -= p.auraLv * 0.12;
             if (Math.random() < 0.05 && typeof addDamageText === 'function') {
-                addDamageText(state.enemies[i].x, state.enemies[i].y, p.auraLv * 2.4, false, '#ff8800');
+                addDamageText(nearAura[i].x, nearAura[i].y, p.auraLv * 2.4, false, '#ff8800');
             }
         }
     }
@@ -302,8 +307,8 @@ function updateMissiles() {
                     vy: Math.sin(ang) * 2,
                     target: null,
                     life: 300,
-                    dmg: 45 + p.missileLv * 20,
-                    splash: 60 + p.missileLv * 15
+                    dmg: 25 + p.missileLv * 12,
+                    splash: 40 + p.missileLv * 10
                 });
             }
         }
@@ -351,10 +356,11 @@ function updateMissiles() {
 
         m.x += m.vx; m.y += m.vy;
 
-        // 충돌 범위 체크 (미사일 크기 10)
+        // 충돌 범위 체크 (미사일 크기 10) — 격자로 주변만 탐색
         var hit = false;
-        for (var j = 0; j < state.enemies.length; j++) {
-            var e = state.enemies[j];
+        var nearMissile = getEnemiesNear(m.x, m.y, 10 + 60);
+        for (var j = 0; j < nearMissile.length; j++) {
+            var e = nearMissile[j];
             if (dist(m, e) < 10 + e.r) {
                 hit = true;
                 break;
@@ -364,8 +370,9 @@ function updateMissiles() {
         // 맞았으면 폭발 데미지
         if (hit) {
             playSound('explosion');
-            for (var k = 0; k < state.enemies.length; k++) {
-                var e = state.enemies[k];
+            var splashEnemies = getEnemiesNear(m.x, m.y, m.splash + 60);
+            for (var k = 0; k < splashEnemies.length; k++) {
+                var e = splashEnemies[k];
                 if (dist(m, e) < m.splash) {
                     e.hp -= m.dmg;
                     if (typeof addDamageText === 'function') addDamageText(e.x, e.y, m.dmg, true, '#ff3300');

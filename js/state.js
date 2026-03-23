@@ -6,6 +6,20 @@
 /** 전역 게임 상태 객체 */
 var state = null;
 
+/** 선택된 난이도 (메인 메뉴에서 설정) */
+var selectedDifficulty = 'normal';
+
+/**
+ * 메인 메뉴에서 난이도 버튼을 클릭할 때 호출한다.
+ */
+function setDifficulty(diff) {
+    selectedDifficulty = diff;
+    ['easy', 'normal', 'hard'].forEach(function(d) {
+        var btn = document.getElementById('diff_' + d);
+        if (btn) btn.className = d === diff ? 'mainBtn diffActive' : 'mainBtn diffBtn';
+    });
+}
+
 /**
  * 새 게임을 시작한다.
  * UI의 Game Over / Level Up 화면을 숨기고 state를 초기화한다.
@@ -45,6 +59,26 @@ function startGame(isAdminLogin) {
         damageTexts: [],
         camShake: 0,
 
+        // 난이도
+        difficulty: selectedDifficulty,
+
+        // 시각 이펙트
+        bossWarning: 0,      // 보스 등장 경고 타이머 (프레임)
+        hurtFlash: 0,        // 피격 빨간 플래시 타이머
+        stageClearFx: 0,     // 스테이지 클리어 텍스트 타이머
+
+        // 튜토리얼
+        tutorialDone: false,
+        tutorialTime: 0,
+
+        // 공간 격자 (충돌 최적화)
+        enemyGrid: null,
+
+        // 보스 전투 전용
+        bossArena: null,         // { x, y, r }
+        bossProjectiles: [],
+        bossName: '',            // 현재 등장 보스 이름
+
         // 스테이지 정보
         stage: 1,
         stageTime: 0,
@@ -73,6 +107,7 @@ function startGame(isAdminLogin) {
             // 경험치 / 레벨
             xp: 0, xpMax: 15, level: 1,
             pendingLevelUps: 0,
+            rerollsLeft: 0, // 레벨업 화면 리롤 횟수 (레벨업마다 1회 지급)
 
             // 무적
             invincible: 0,

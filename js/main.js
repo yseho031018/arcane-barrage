@@ -6,6 +6,13 @@
 // 키보드 입력 (게임 이동용)
 document.addEventListener('keydown', function (e) { keys[e.key] = true; });
 
+// UI 버튼 클릭 시 효과음 재생
+document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'BUTTON' && typeof playSound === 'function') {
+        playSound('click');
+    }
+});
+
 // 관리자 모드 플래그
 var isAdmin = false;
 
@@ -85,6 +92,7 @@ document.addEventListener('keydown', function (e) {
         if (e.key === 'u' || e.key === 'U') { forceLevelUp(); }
         if (e.key === 'i' || e.key === 'I') { forceNextStage(); }
         if (e.key === 'e' || e.key === 'E') { absorbAllExp(); }
+        if (e.key === 'o' || e.key === 'O') { spawnBossCheat(); }
     }
 
     // 일시정지(메뉴) 단축키

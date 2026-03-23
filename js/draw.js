@@ -38,6 +38,84 @@ function draw() {
     ctx.save();
     ctx.translate(-cx, -cy);
 
+    // ── 보스 전투 영역 ──────────────────────
+    if (state.bossArena) {
+        var ba = state.bossArena;
+        var pulse = 0.55 + Math.sin(state.time * 0.04) * 0.15;
+
+        // 내부 방사형 그라데이션 (중심→가장자리로 붉게)
+        var arenaGrad = ctx.createRadialGradient(ba.x, ba.y, ba.r * 0.4, ba.x, ba.y, ba.r);
+        arenaGrad.addColorStop(0, 'rgba(80,0,0,0)');
+        arenaGrad.addColorStop(1, 'rgba(160,0,0,0.18)');
+        ctx.fillStyle = arenaGrad;
+        ctx.beginPath(); ctx.arc(ba.x, ba.y, ba.r, 0, Math.PI * 2); ctx.fill();
+
+        // 점선 외곽 테두리
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        ctx.strokeStyle = '#ff2233';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 14;
+        ctx.setLineDash([22, 12]);
+        ctx.beginPath(); ctx.arc(ba.x, ba.y, ba.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
+
+        // 8방향 경고 마커
+        for (var qi = 0; qi < 8; qi++) {
+            var qa = (Math.PI / 4) * qi;
+            var qx = ba.x + Math.cos(qa) * ba.r;
+            var qy = ba.y + Math.sin(qa) * ba.r;
+            ctx.save();
+            ctx.translate(qx, qy);
+            ctx.rotate(qa + Math.PI / 2);
+            ctx.globalAlpha = pulse * 0.9;
+            ctx.fillStyle = '#ff3344';
+            ctx.beginPath();
+            ctx.moveTo(0, -11); ctx.lineTo(7, 7); ctx.lineTo(-7, 7);
+            ctx.closePath(); ctx.fill();
+            ctx.restore();
+        }
+        ctx.restore();
+
+        // 경계 근접 경고: 플레이어가 가장자리 100px 이내일 때 테두리 강조 + 안쪽 화살표
+        var pArenaDist = Math.sqrt((p.x - ba.x) * (p.x - ba.x) + (p.y - ba.y) * (p.y - ba.y));
+        var warnZone = ba.r - 100;
+        if (pArenaDist > warnZone) {
+            var warnRatio = (pArenaDist - warnZone) / 100; // 0~1
+            var warnBlink = Math.floor(state.time / 5) % 2 === 0 ? 1 : 0.2;
+            // 밝게 채워지는 외곽선
+            ctx.save();
+            ctx.globalAlpha = warnRatio * warnBlink * 0.9;
+            ctx.strokeStyle = '#ff2222';
+            ctx.lineWidth = 5;
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 22;
+            ctx.beginPath(); ctx.arc(ba.x, ba.y, ba.r, 0, Math.PI * 2); ctx.stroke();
+            ctx.shadowBlur = 0;
+            // 플레이어 위치에서 영역 중심 방향 화살표 (되돌아가라)
+            var backAng = Math.atan2(ba.y - p.y, ba.x - p.x);
+            var arrowBase = 28;
+            ctx.strokeStyle = '#ffcc00';
+            ctx.lineWidth = 3;
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + Math.cos(backAng) * arrowBase, p.y + Math.sin(backAng) * arrowBase);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(p.x + Math.cos(backAng) * arrowBase, p.y + Math.sin(backAng) * arrowBase);
+            ctx.lineTo(p.x + Math.cos(backAng + 2.4) * 12, p.y + Math.sin(backAng + 2.4) * 12);
+            ctx.moveTo(p.x + Math.cos(backAng) * arrowBase, p.y + Math.sin(backAng) * arrowBase);
+            ctx.lineTo(p.x + Math.cos(backAng - 2.4) * 12, p.y + Math.sin(backAng - 2.4) * 12);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        }
+    }
+
     // ── XP 젬 ──────────────────────────────
     for (var i = 0; i < state.xpGems.length; i++) {
         var g = state.xpGems[i];
@@ -116,6 +194,20 @@ function draw() {
     }
     ctx.shadowBlur = 0;
 
+    // ── 보스 투사체 ────────────────────────
+    for (var bpi = 0; bpi < state.bossProjectiles.length; bpi++) {
+        var bp = state.bossProjectiles[bpi];
+        ctx.shadowColor = bp.color;
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = bp.color;
+        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.r, 0, Math.PI * 2); ctx.fill();
+        // 흰 코어
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.r * 0.38, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
     // ── 투사체 ─────────────────────────────
     ctx.shadowColor = '#44aaff';
     ctx.shadowBlur = 10;
@@ -183,13 +275,89 @@ function draw() {
         ctx.fillStyle = e.color;
         ctx.shadowColor = e.color;
         ctx.shadowBlur = e.isBoss ? 20 : 6;
-        ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+
+        if (e.type === 'dasher') {
+            // 대시형 적: 다이아몬드 모양
+            ctx.save();
+            ctx.translate(e.x, e.y);
+            if (e.isDashing) {
+                // 돌진 중: 방향으로 회전 + 노란 테두리 강조
+                var dashAng = Math.atan2(e.dashVy, e.dashVx);
+                ctx.rotate(dashAng + Math.PI / 4);
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 16;
+            }
+            ctx.beginPath();
+            ctx.moveTo(0, -e.r);
+            ctx.lineTo(e.r, 0);
+            ctx.lineTo(0, e.r);
+            ctx.lineTo(-e.r, 0);
+            ctx.closePath();
+            ctx.fill();
+            if (e.isDashing) {
+                ctx.strokeStyle = '#ffee00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            ctx.restore();
+        } else {
+            ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+        }
         ctx.shadowBlur = 0;
 
-        if (e.isBoss) { // 보스 테두리 표시
+        if (e.isBoss) {
+            // 보스 흰 테두리
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
             ctx.stroke();
+
+            // 폭풍술사 순간이동 이펙트: 링 파문
+            if (e.bossType === 'storm' && e.teleportFx > 0) {
+                var tfRatio = e.teleportFx / 30;
+                ctx.save();
+                ctx.globalAlpha = tfRatio * 0.8;
+                ctx.strokeStyle = '#88ccff';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#4488ff';
+                ctx.shadowBlur = 20;
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.r + (1 - tfRatio) * 80, 0, Math.PI * 2); ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            }
+
+            // 돌진 예고: 깜빡이는 노란 링 + 방향 화살표 (감시자 전용)
+            if (e.bossType === 'watcher' && e.chargeTelegraph > 0) {
+                var tRatio = e.chargeTelegraph / 45;
+                var blink = Math.floor(state.time / 4) % 2 === 0 ? 1 : 0.35;
+                ctx.save();
+                ctx.globalAlpha = tRatio * blink;
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 4;
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 20;
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 12, 0, Math.PI * 2); ctx.stroke();
+                ctx.shadowBlur = 0;
+                var arrAng = Math.atan2(e.chargeVy, e.chargeVx);
+                var tipX = e.x + Math.cos(arrAng) * (e.r + 90);
+                var tipY = e.y + Math.sin(arrAng) * (e.r + 90);
+                ctx.strokeStyle = '#ff4444';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.moveTo(e.x + Math.cos(arrAng) * e.r, e.y + Math.sin(arrAng) * e.r);
+                ctx.lineTo(tipX, tipY);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(tipX, tipY);
+                ctx.lineTo(tipX + Math.cos(arrAng + 2.5) * 18, tipY + Math.sin(arrAng + 2.5) * 18);
+                ctx.moveTo(tipX, tipY);
+                ctx.lineTo(tipX + Math.cos(arrAng - 2.5) * 18, tipY + Math.sin(arrAng - 2.5) * 18);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            }
         }
 
         // HP 바
@@ -200,8 +368,21 @@ function draw() {
 
         ctx.fillStyle = '#333';
         ctx.fillRect(e.x - e.r, hpY, hpW, hpH);
-        ctx.fillStyle = '#ff4444';
+        ctx.fillStyle = e.isBoss ? e.color : '#ff4444';
         ctx.fillRect(e.x - e.r, hpY, hpW * eHpRatio, hpH);
+
+        // 보스 이름 태그
+        if (e.isBoss && state.bossName) {
+            ctx.save();
+            ctx.font = 'bold 13px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#fff';
+            ctx.shadowColor = e.color;
+            ctx.shadowBlur = 8;
+            ctx.fillText(state.bossName, e.x, hpY - 6);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        }
     }
 
     // ── 플레이어 ───────────────────────────
@@ -254,6 +435,95 @@ function draw() {
     ctx.shadowBlur = 0;
 
     ctx.restore(); // 카메라 변환 종료
+
+    // ── 피격 빨간 플래시 (화면 테두리 비네트) ──────
+    if (state.hurtFlash > 0) {
+        var hAlpha = Math.min(0.28, state.hurtFlash / 25 * 0.28);
+        var hGrad = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 0.9);
+        hGrad.addColorStop(0, 'rgba(200,0,0,0)');
+        hGrad.addColorStop(1, 'rgba(220,0,0,' + hAlpha + ')');
+        ctx.fillStyle = hGrad;
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    // ── 보스 등장 경고 오버레이 ─────────────────
+    if (state.bossWarning > 0) {
+        var bAlpha = Math.min(1, state.bossWarning / 40);
+        ctx.save();
+        ctx.globalAlpha = bAlpha;
+        // 텍스트 배경 띠
+        ctx.fillStyle = 'rgba(100, 0, 0, 0.55)';
+        ctx.fillRect(0, H / 2 - 68, W, 136);
+        // ⚠ BOSS 텍스트 (펄스 스케일)
+        var pulse = 1 + Math.sin(state.time * 0.25) * 0.06;
+        ctx.save();
+        ctx.translate(W / 2, H / 2 - 16);
+        ctx.scale(pulse, pulse);
+        ctx.font = 'bold 52px Arial';
+        ctx.fillStyle = '#ff2222';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 24;
+        ctx.fillText('⚠ BOSS ⚠', 0, 0);
+        ctx.restore();
+        ctx.font = 'bold 22px Arial';
+        ctx.fillStyle = '#ffaa44';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#ff6600';
+        ctx.shadowBlur = 10;
+        ctx.fillText('강력한 보스가 나타났다!', W / 2, H / 2 + 38);
+        if (state.bossName) {
+            ctx.font = 'bold 28px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ff2222';
+            ctx.shadowBlur = 16;
+            ctx.fillText('【 ' + state.bossName + ' 】', W / 2, H / 2 + 75);
+        }
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+
+    // ── 스테이지 클리어 텍스트 ─────────────────
+    if (state.stageClearFx > 0) {
+        var cAlpha = Math.min(1, state.stageClearFx / 30) * Math.min(1, state.stageClearFx / 150 * 5);
+        ctx.save();
+        ctx.globalAlpha = cAlpha;
+        var cScale = 1 + (1 - Math.min(1, state.stageClearFx / 120)) * 0.15;
+        ctx.translate(W / 2, H / 2);
+        ctx.scale(cScale, cScale);
+        ctx.font = 'bold 56px Arial';
+        ctx.fillStyle = '#ffdd00';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#ffaa00';
+        ctx.shadowBlur = 30;
+        ctx.fillText('✨ STAGE CLEAR! ✨', 0, 0);
+        ctx.font = '24px Arial';
+        ctx.fillStyle = '#aaffaa';
+        ctx.shadowColor = '#00ff88';
+        ctx.shadowBlur = 12;
+        ctx.fillText('→  Stage ' + (state.stage) + '  진입', 0, 42);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+
+    // ── 튜토리얼 힌트 (게임 시작 후 8초) ────────
+    if (!state.tutorialDone) {
+        var tAlpha = Math.min(1, (480 - state.tutorialTime) / 60) * 0.88;
+        if (tAlpha > 0) {
+            ctx.save();
+            ctx.globalAlpha = tAlpha;
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fillRect(0, H - 62, W, 62);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#ccccff';
+            ctx.textAlign = 'center';
+            ctx.fillText('🕹 이동: WASD / 방향키  |  자동 공격  |  B: BGM  |  N: SFX  |  ESC: 메뉴', W / 2, H - 34);
+            ctx.font = '13px Arial';
+            ctx.fillStyle = '#9999cc';
+            ctx.fillText('레벨업 시 스킬 3개 중 하나를 선택하세요. 보스를 처치하면 다음 스테이지로 진입합니다.', W / 2, H - 14);
+            ctx.restore();
+        }
+    }
 
     // ── 가상 조이스틱 (터치 UI) ─────────────
     if (typeof joystick !== 'undefined' && joystick.active) {

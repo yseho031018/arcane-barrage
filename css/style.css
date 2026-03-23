@@ -338,4 +338,41 @@ body {
         font-size: 9px;
         padding: 2px 6px;
     }
-}
+}
+/* ── 난이도 선택 버튼 ──────────────────────── */
+.diffBtn {
+    font-size: 14px !important;
+    padding: 8px 18px !important;
+    width: auto !important;
+    margin-top: 0 !important;
+    background: #1a0030 !important;
+    border: 1px solid #5533aa !important;
+    opacity: 0.85;
+}
+
+.diffActive {
+    font-size: 14px !important;
+    padding: 8px 18px !important;
+    width: auto !important;
+    margin-top: 0 !important;
+    background: #3a0070 !important;
+    border: 2px solid #cc88ff !important;
+    box-shadow: 0 0 10px #aa44ff !important;
+    opacity: 1;
+}
+
+/* ── 리롤 버튼 ──────────────────────────── */
+.rerollBtn {
+    background: #1a1a00;
+    border: 1px solid #aaaa22;
+    color: #ffee44;
+    font-size: 14px;
+    padding: 8px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+.rerollBtn:hover {
+    background: #2a2a00;
+    box-shadow: 0 0 8px #aaaa22;
+}

@@ -24,6 +24,19 @@ function updateCanvasSize() {
     }
 }
 
+/** 적 최대 동시 존재 수 (메모리 누수 방지) */
+var MAX_ENEMIES = 200;
+
+/** 공간 격자 충돌 최적화용 셀 크기 (px) */
+var GRID_CELL_SIZE = 80;
+
+/** 난이도별 배율 설정 */
+var DIFFICULTY_SETTINGS = {
+    easy:   { hpMult: 0.60, spdMult: 0.80, spawnRateAdd: 30 },
+    normal: { hpMult: 1.00, spdMult: 1.00, spawnRateAdd: 0  },
+    hard:   { hpMult: 1.50, spdMult: 1.20, spawnRateAdd: -20 },
+};
+
 /** 스킬 풀 - 레벨업 시 랜덤으로 3개 제시됨 */
 var SKILLS = [
   // ── 패시브 스킬 ──────────────────────────────────────────────

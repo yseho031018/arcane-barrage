@@ -256,10 +256,31 @@ function toggleMenu() {
 }
 
 /**
- * 메인 게임 루프 (requestAnimationFrame 기반)
+ * 메인 게임 루프 — 고정 타임스텝(Fixed Timestep) 방식
+ *
+ * update()는 항상 60fps(16.67ms) 기준으로 실행된다.
+ * 120Hz 모바일 등 고주사율 기기에서도 게임 속도가 일정하게 유지된다.
+ * draw()는 실제 디스플레이 주사율에 맞춰 호출되어 부드러운 렌더링을 유지한다.
  */
-function loop() {
-    update();
+var _loopLastTime = 0;
+var _loopAccum = 0;
+var _LOOP_STEP = 1000 / 60; // 16.667ms
+
+function loop(timestamp) {
+    var elapsed = timestamp - _loopLastTime;
+    _loopLastTime = timestamp;
+
+    // 탭 전환 등으로 오래 멈췄다가 재개될 때 큰 dt가 들어오는 것을 방지
+    if (elapsed > 200) elapsed = 200;
+
+    _loopAccum += elapsed;
+
+    // 누적 시간이 한 스텝(16.67ms) 이상이면 update()를 그만큼 실행
+    while (_loopAccum >= _LOOP_STEP) {
+        update();
+        _loopAccum -= _LOOP_STEP;
+    }
+
     draw();
     requestAnimationFrame(loop);
 }
@@ -274,4 +295,7 @@ window.addEventListener('resize', function() {
 });
 
 goToMainMenu();
-loop();
+requestAnimationFrame(function(ts) {
+    _loopLastTime = ts;
+    requestAnimationFrame(loop);
+});

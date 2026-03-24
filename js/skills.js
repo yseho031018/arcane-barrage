@@ -75,7 +75,7 @@ function showLevelUp() {
     if (rerollDiv) {
         var p = state.player;
         if (p.rerollsLeft > 0) {
-            rerollDiv.innerHTML = '<button id="rerollBtn" class="rerollBtn">🔀 다시 뽑기 (남은 횟수: ' + p.rerollsLeft + ')</button>';
+            rerollDiv.innerHTML = '<button id="rerollBtn" class="rerollBtn">🔀 다시 뽑기 [R]  (남은 횟수: ' + p.rerollsLeft + ')</button>';
             document.getElementById('rerollBtn').onclick = function () {
                 p.rerollsLeft--;
                 playSound('click');

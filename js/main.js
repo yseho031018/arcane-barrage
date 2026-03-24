@@ -86,9 +86,19 @@ document.addEventListener('keydown', function (e) {
         }
     }
 
-    // 치트 단축키 (R: 모든 적 제거, U: 강제 레벨업, I: 다음 스테이지, E: 경험치 흡수) - 관리자 한정
+    // 레벨업 화면에서 R키 = 다시 뽑기
+    if (e.key === 'r' || e.key === 'R') {
+        var lvlUpDiv  = document.getElementById('levelUp');
+        var rerollBtn = document.getElementById('rerollBtn');
+        if (lvlUpDiv && lvlUpDiv.style.display !== 'none' && rerollBtn) {
+            rerollBtn.click();
+            return;
+        }
+    }
+
+    // 치트 단축키 (K: 모든 적 제거, U: 강제 레벨업, I: 다음 스테이지, E: 경험치 흡수) - 관리자 한정
     if (isAdmin) {
-        if (e.key === 'r' || e.key === 'R') { killAllEnemies(); }
+        if (e.key === 'k' || e.key === 'K') { killAllEnemies(); }
         if (e.key === 'u' || e.key === 'U') { forceLevelUp(); }
         if (e.key === 'i' || e.key === 'I') { forceNextStage(); }
         if (e.key === 'e' || e.key === 'E') { absorbAllExp(); }

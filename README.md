@@ -1,6 +1,6 @@
 # 🌟 아케인 배라지 (Arcane Barrage)
 
-![Game Status](https://img.shields.io/badge/Status-v1.6.0-blue)
+![Game Status](https://img.shields.io/badge/Status-v1.7.0-blue)
 [![Live Demo](https://img.shields.io/badge/Demo-Play%20Now-brightgreen)](https://yseho031018.github.io/arcane-barrage/)
 ![Platform](https://img.shields.io/badge/Platform-Web-success)
 
@@ -37,6 +37,12 @@
 ---
 
 ## 📜 업데이트 내역 (Changelog)
+
+### v1.7.0 (모바일 전용 레이아웃 & 고정 타임스텝)
+*   **모바일 세로 전용 화면 비율:** 모바일 세로(Portrait) 모드에서 게임 캔버스를 **9:16 고정 비율**로 렌더링, 기기마다 일관된 게임 뷰포트 보장
+*   **하단 조이스틱 전용 영역:** 9:16 캔버스 아래 남은 공간을 별도 조이스틱 존으로 활용 — 드래그 시 HTML 기반 가상 조이스틱(vjBase/vjStick) 표시
+*   **모바일 120Hz 고속 진행 문제 해결:** 고정 타임스텝(Fixed Timestep) 방식으로 게임 루프 전환, 고주사율(90/120Hz) 기기에서도 정상 게임 속도 유지
+*   **PC / 가로 모드:** 기존 풀스크린 동적 캔버스 방식 유지
 
 ### v1.6.0 (보스 다중 타입 시스템 & 전투 고도화)
 *   **3종류 랜덤 보스 등장:** 보스 처치마다 `👁 감시자`, `⚡ 폭풍술사`, `☠ 독술사` 중 랜덤으로 한 종류가 스폰되며, 각각 고유 색상·스탯·패턴을 가짐

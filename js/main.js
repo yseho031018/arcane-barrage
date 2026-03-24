@@ -132,9 +132,11 @@ document.addEventListener('touchstart', function(e) {
     if (!state || state.paused) return;
     // UI 버튼 터치면 무시
     if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
-    
+
     for(var i=0; i<e.changedTouches.length; i++){
         var t = e.changedTouches[i];
+        // 모바일 세로 모드: 캔버스 아래(하단 조이스틱 존) 터치는 별도 핸들러에서 처리
+        if (IS_MOBILE && window.innerHeight > window.innerWidth && t.clientY > CANVAS_H) continue;
         var pos = getTouchCanvasPos(t);
         joystick.active = true;
         joystick.sx = pos.x;
@@ -185,6 +187,82 @@ document.addEventListener('touchend', function(e) {
         }
     }
 });
+
+// ── 모바일 하단 조이스틱 존 전용 핸들러 ────────────────
+(function() {
+    var mzEl = document.getElementById('mobileZone');
+    var vjB  = document.getElementById('vjBase');
+    var vjS  = document.getElementById('vjStick');
+    var vjH  = document.getElementById('vjHint');
+    if (!mzEl) return;
+
+    function vjReset() {
+        joystick.active  = false;
+        joystick.dx      = 0;
+        joystick.dy      = 0;
+        joystick.touchId = null;
+        if (vjB) vjB.style.display = 'none';
+        if (vjS) { vjS.style.left = '34px'; vjS.style.top = '34px'; }
+        if (vjH) vjH.style.display = '';
+    }
+
+    mzEl.addEventListener('touchstart', function(e) {
+        if (!state || state.paused) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var t    = e.changedTouches[0];
+        var rect = mzEl.getBoundingClientRect();
+
+        joystick.active  = true;
+        joystick.sx      = t.clientX;
+        joystick.sy      = t.clientY;
+        joystick.cx      = t.clientX;
+        joystick.cy      = t.clientY;
+        joystick.dx      = 0;
+        joystick.dy      = 0;
+        joystick.touchId = t.identifier;
+
+        if (vjB) {
+            vjB.style.display = 'block';
+            vjB.style.left    = (t.clientX - rect.left - 60) + 'px';
+            vjB.style.top     = (t.clientY - rect.top  - 60) + 'px';
+        }
+        if (vjS) { vjS.style.left = '34px'; vjS.style.top = '34px'; }
+        if (vjH) vjH.style.display = 'none';
+    }, {passive: false});
+
+    mzEl.addEventListener('touchmove', function(e) {
+        if (!joystick.active) return;
+        e.preventDefault();
+        for (var i = 0; i < e.changedTouches.length; i++) {
+            var t = e.changedTouches[i];
+            if (t.identifier !== joystick.touchId) continue;
+            var dx  = t.clientX - joystick.sx;
+            var dy  = t.clientY - joystick.sy;
+            var maxDist = 55;
+            var d   = Math.sqrt(dx * dx + dy * dy);
+            if (d > maxDist) { dx = dx / d * maxDist; dy = dy / d * maxDist; }
+            joystick.cx = joystick.sx + dx;
+            joystick.cy = joystick.sy + dy;
+            joystick.dx = dx / maxDist;
+            joystick.dy = dy / maxDist;
+            // HTML 스틱 시각 업데이트 (±26px 범위로 클램핑)
+            if (vjS) {
+                var vx = Math.max(-26, Math.min(26, dx * 26 / maxDist));
+                var vy = Math.max(-26, Math.min(26, dy * 26 / maxDist));
+                vjS.style.left = (34 + vx) + 'px';
+                vjS.style.top  = (34 + vy) + 'px';
+            }
+        }
+    }, {passive: false});
+
+    mzEl.addEventListener('touchend',    function(e) {
+        for (var i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === joystick.touchId) vjReset();
+        }
+    });
+    mzEl.addEventListener('touchcancel', vjReset);
+})();
 
 // ── 개발자용 치트 기능 ─────────────────────
 function killAllEnemies() {

@@ -11,17 +11,83 @@ var CANVAS_H = window.innerHeight;
 var HALF_W = CANVAS_W / 2;
 var HALF_H = CANVAS_H / 2;
 
-/** 캔버스 크기를 현재 window 크기에 맞게 갱신 */
+/** 모바일 기기 감지 */
+var IS_MOBILE = ('ontouchstart' in window) || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+/**
+ * 캔버스 크기를 현재 window 크기에 맞게 갱신.
+ * 모바일 세로 화면: 9:16 고정 비율 게임 영역 + 하단 조이스틱 존
+ * 데스크탑 / 가로 화면: 풀스크린
+ */
 function updateCanvasSize() {
     var c = document.getElementById('gameCanvas');
-    if (c) {
-        CANVAS_W = window.innerWidth;
-        CANVAS_H = window.innerHeight;
-        HALF_W = CANVAS_W / 2;
-        HALF_H = CANVAS_H / 2;
-        c.width  = CANVAS_W;
-        c.height = CANVAS_H;
+    var ui = document.getElementById('ui');
+    var mobileZone = document.getElementById('mobileZone');
+    if (!c) return;
+
+    var sw = window.innerWidth;
+    var sh = window.innerHeight;
+
+    if (IS_MOBILE && sh > sw) {
+        // ── 모바일 세로: 9:16 게임 영역 ──────────────────────────
+        var gameW = sw;
+        var gameH = Math.floor(gameW * 16 / 9);
+        if (gameH > sh) {
+            // 드물게 화면이 9:16보다 짧을 때 (필러박스)
+            gameH = sh;
+            gameW = Math.floor(sh * 9 / 16);
+        }
+        var offsetX = Math.floor((sw - gameW) / 2);
+        var zoneH   = sh - gameH;
+
+        CANVAS_W = gameW;
+        CANVAS_H = gameH;
+        c.width  = gameW;
+        c.height = gameH;
+        c.style.left   = offsetX + 'px';
+        c.style.top    = '0px';
+        c.style.width  = gameW + 'px';
+        c.style.height = gameH + 'px';
+
+        if (ui) {
+            ui.style.left   = offsetX + 'px';
+            ui.style.top    = '0px';
+            ui.style.width  = gameW + 'px';
+            ui.style.height = gameH + 'px';
+        }
+        if (mobileZone) {
+            if (zoneH > 10) {
+                mobileZone.style.display = 'flex';
+                mobileZone.style.left    = offsetX + 'px';
+                mobileZone.style.top     = gameH + 'px';
+                mobileZone.style.width   = gameW + 'px';
+                mobileZone.style.height  = zoneH + 'px';
+            } else {
+                mobileZone.style.display = 'none';
+            }
+        }
+    } else {
+        // ── PC / 가로 모드: 풀스크린 ──────────────────────────────
+        CANVAS_W = sw;
+        CANVAS_H = sh;
+        c.width  = sw;
+        c.height = sh;
+        c.style.left   = '0px';
+        c.style.top    = '0px';
+        c.style.width  = sw + 'px';
+        c.style.height = sh + 'px';
+
+        if (ui) {
+            ui.style.left   = '0px';
+            ui.style.top    = '0px';
+            ui.style.width  = sw + 'px';
+            ui.style.height = sh + 'px';
+        }
+        if (mobileZone) mobileZone.style.display = 'none';
     }
+
+    HALF_W = CANVAS_W / 2;
+    HALF_H = CANVAS_H / 2;
 }
 
 /** 적 최대 동시 존재 수 (메모리 누수 방지) */

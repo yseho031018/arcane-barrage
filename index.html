@@ -107,6 +107,12 @@
                     </h3>
                     <div class="patchScrollArea">
                         <div class="patchItem">
+                            <strong style="color: #aaffcc;">[v1.7.0] 모바일 전용 레이아웃</strong><br>
+                            • 📱 모바일 세로 화면 9:16 고정 비율 전용 레이아웃 도입<br>
+                            • 🕹 하단 전용 조이스틱 존 추가 (HTML 가상 조이스틱)<br>
+                            • ⏱ 고정 타임스텝(Fixed Timestep) 적용 — 120Hz 기기 고속 진행 문제 해결
+                        </div>
+                        <div class="patchItem">
                             <strong style="color: #ffaa44;">[v1.6.0] 보스 다중 타입 시스템</strong><br>
                             • 👁 감시자 / ⚡ 폭풍술사 / ☠ 독술사 — 랜덤 보스 3종 추가<br>
                             • 보스 전투 영역(아레나) — 영역 밖 이탈 불가<br>
@@ -147,6 +153,16 @@
             <button class="mainBtn" onclick="goToMainMenu()" style="margin-top:16px;">🏠 메인으로</button>
         </div>
     </div><!-- /#ui -->
+
+    <!-- 모바일 세로 전용 조이스틱 영역 (게임 캔버스 하단) -->
+    <div id="mobileZone">
+        <div id="vjBase"><div id="vjStick"></div></div>
+        <div id="vjHint">
+            <div style="font-size:30px; opacity:0.35; margin-bottom:2px;">⊙</div>
+            <div>조이스틱 영역</div>
+            <div style="font-size:11px; margin-top:2px; opacity:0.7;">터치하여 이동</div>
+        </div>
+    </div>
 
     <!--
   JS 로드 순서 (의존성 순서를 지켜야 함)

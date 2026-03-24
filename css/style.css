@@ -376,3 +376,48 @@ body {
     background: #2a2a00;
     box-shadow: 0 0 8px #aaaa22;
 }
+
+/* ── 모바일 세로 전용 하단 조이스틱 존 ─────────── */
+#mobileZone {
+    display: none;
+    position: fixed;
+    background: #050510;
+    border-top: 1px solid #1a0035;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    z-index: 5;
+}
+
+#vjBase {
+    display: none;
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(100, 0, 180, 0.12);
+    border: 2px solid rgba(170, 68, 255, 0.35);
+    pointer-events: none;
+}
+
+#vjStick {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(200, 100, 255, 0.85), rgba(90, 0, 160, 0.75));
+    border: 2px solid rgba(200, 100, 255, 0.5);
+    top: 34px;   /* (120-52)/2 = 34 */
+    left: 34px;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(150, 50, 255, 0.4);
+}
+
+#vjHint {
+    color: rgba(130, 60, 190, 0.45);
+    font-size: 13px;
+    pointer-events: none;
+    user-select: none;
+    text-align: center;
+    line-height: 1.6;
+}
